@@ -59,9 +59,29 @@ ANTHROPIC_API_KEY=sk-ant-api03-xxx
 
 ## 🗄️ Paso 4: Inicializar la Base de Datos
 
-La base de datos se inicializa automáticamente la primera vez que se hace una petición a `/api/libros`.
+### Opción A: Automática (Recomendado)
 
-Si quieres inicializarla manualmente, puedes ejecutar este SQL directamente en el **SQL Editor** de Neon:
+La base de datos se inicializa automáticamente la primera vez que visitas la **Biblioteca** o intentas guardar un libro.
+
+### Opción B: Manual con Endpoint
+
+Visita la siguiente URL después del deployment:
+
+```
+https://tu-app.vercel.app/api/init-db
+```
+
+Deberías ver un mensaje de éxito:
+```json
+{
+  "exito": true,
+  "mensaje": "Base de datos inicializada correctamente"
+}
+```
+
+### Opción C: Manual con SQL Editor de Neon
+
+Si prefieres hacerlo manualmente, ejecuta este SQL en el **SQL Editor** de Neon:
 
 ```sql
 CREATE TABLE IF NOT EXISTS libros (

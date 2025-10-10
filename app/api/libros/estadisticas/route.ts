@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, initDatabase } from '@/lib/db';
 
 /**
  * GET /api/libros/estadisticas
@@ -7,6 +7,13 @@ import { sql } from '@/lib/db';
  */
 export async function GET() {
   try {
+    // Intentar inicializar la DB si no existe (primera ejecución)
+    try {
+      await initDatabase();
+    } catch (initError) {
+      console.log('ℹ️ Tabla ya existe o error al crear:', initError);
+    }
+
     const result = await sql`
       SELECT
         COUNT(*)::int as total_libros,

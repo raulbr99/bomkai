@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, initDatabase } from '@/lib/db';
 import type { LibroGuardado, ConfiguracionLibro, Outline, Capitulo } from '@/lib/types';
 
 /**
@@ -8,6 +8,13 @@ import type { LibroGuardado, ConfiguracionLibro, Outline, Capitulo } from '@/lib
  */
 export async function GET() {
   try {
+    // Intentar inicializar la DB si no existe (primera ejecución)
+    try {
+      await initDatabase();
+    } catch (initError) {
+      console.log('ℹ️ Tabla ya existe o error al crear:', initError);
+    }
+
     const result = await sql`
       SELECT * FROM libros
       ORDER BY fecha_creacion DESC
@@ -42,6 +49,13 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Intentar inicializar la DB si no existe (primera ejecución)
+    try {
+      await initDatabase();
+    } catch (initError) {
+      console.log('ℹ️ Tabla ya existe o error al crear:', initError);
+    }
+
     const body = await request.json();
     const { titulo, sinopsis, configuracion, outline, capitulos } = body;
 
