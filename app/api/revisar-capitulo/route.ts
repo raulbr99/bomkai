@@ -45,8 +45,9 @@ export async function POST(request: NextRequest) {
 
     // Llamar a Claude API
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 8000,
+      temperature: 1.0,
       messages: [
         {
           role: 'user',

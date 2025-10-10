@@ -61,18 +61,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar que tenemos la API key (corregir nombre de variable)
+    // Validar que tenemos la API key
     const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
     console.log('🔑 [generar-capitulo] Verificando API key:', {
       hasApiKey: !!apiKey,
       keyLength: apiKey?.length || 0,
       keyPrefix: apiKey?.substring(0, 10) || 'N/A',
     });
-    
+
     if (!apiKey) {
       console.error('❌ [generar-capitulo] API key no configurada');
       return new Response(
-        JSON.stringify({ tipo: 'error', contenido: 'ANTHROPIC_API_KEY no está configurada' }),
+        JSON.stringify({
+          tipo: 'error',
+          contenido: 'ANTHROPIC_API_KEY no está configurada. Verifica que NEXT_PUBLIC_ANTHROPIC_API_KEY esté configurada en las variables de entorno de Vercel.'
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Validar formato de la API key
+    if (!apiKey.startsWith('sk-ant-')) {
+      console.error('❌ [generar-capitulo] API key con formato inválido');
+      return new Response(
+        JSON.stringify({
+          tipo: 'error',
+          contenido: 'La API key de Anthropic tiene un formato inválido. Debe comenzar con "sk-ant-"'
+        }),
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
@@ -109,30 +127,39 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         try {
           console.log('🤖 [generar-capitulo] Llamando a Anthropic API...');
-          
-          // Usar streaming de Anthropic
-          const streamResponse = await anthropic.messages.stream({
-            model: 'claude-sonnet-4-5-20250929',
+
+          // Usar streaming de Anthropic con stream: true
+          const stream = await anthropic.messages.create({
+            model: 'claude-sonnet-4-20250514',
             max_tokens: 8000,
+            temperature: 1.0,
             messages: [
               {
                 role: 'user',
                 content: prompt,
               },
             ],
+            stream: true,
+          }).catch((streamError: unknown) => {
+            console.error('❌ [generar-capitulo] Error iniciando stream:', {
+              error: streamError instanceof Error ? streamError.message : 'Error desconocido',
+              name: streamError instanceof Error ? streamError.name : undefined,
+            });
+            throw streamError;
           });
-          
+
           console.log('✅ [generar-capitulo] Conexión con Anthropic establecida');
 
           // Procesar cada chunk del stream
           console.log('📦 [generar-capitulo] Procesando chunks del stream...');
           let chunkCount = 0;
-          
-          for await (const event of streamResponse) {
-            if (event.type === 'content_block_delta') {
-              if (event.delta.type === 'text_delta') {
+
+          for await (const messageStreamEvent of stream) {
+            // Procesar eventos de tipo content_block_delta que contienen el texto
+            if (messageStreamEvent.type === 'content_block_delta') {
+              if (messageStreamEvent.delta.type === 'text_delta') {
                 chunkCount++;
-                const texto = event.delta.text;
+                const texto = messageStreamEvent.delta.text;
                 contenidoCompleto += texto;
 
                 // Log cada 50 chunks para no saturar los logs
