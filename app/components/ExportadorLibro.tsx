@@ -54,17 +54,19 @@ export default function ExportadorLibro({ titulo, sinopsis, capitulos, configura
   const formatoActual = formatosDisponibles.find(f => f.valor === formatoSeleccionado)!;
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg shadow-lg p-6 border-2 border-green-200 dark:border-green-800">
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="w-full max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg shadow-lg p-4 md:p-6 border-2 border-green-200 dark:border-green-800">
+      <div className="mb-4 md:mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
           ¡Libro Completado!
         </h3>
-        <p className="text-gray-700 dark:text-gray-300">
-          <strong>{titulo}</strong> - {capitulosCompletados.length} capítulos, {palabrasTotales.toLocaleString()} palabras
+        <p className="text-sm md:text-base text-gray-700 dark:text-gray-300">
+          <strong className="block sm:inline">{titulo}</strong>
+          <span className="hidden sm:inline"> - </span>
+          <span className="block sm:inline text-xs md:text-sm">{capitulosCompletados.length} capítulos, {palabrasTotales.toLocaleString()} palabras</span>
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {/* Dropdown de formatos */}
         <div>
           <label htmlFor="formato-exportacion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -49,15 +49,15 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <BookOpen className="w-8 h-8 text-blue-600" />
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 lg:p-8">
+        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+          <BookOpen className="w-6 md:w-8 h-6 md:h-8 text-blue-600 flex-shrink-0" />
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
             Configuración del Libro
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Tema */}
           <div>
             <label htmlFor="tema" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -192,17 +192,17 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
           <button
             type="submit"
             disabled={generando}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 md:py-4 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base md:text-lg shadow-lg hover:shadow-xl"
           >
             {generando ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Generando...
+                <span>Generando...</span>
               </>
             ) : (
               <>
                 <BookOpen className="w-5 h-5" />
-                Generar Libro
+                <span>Generar Libro</span>
               </>
             )}
           </button>

@@ -15,20 +15,20 @@ export default function VisualizadorProgreso({ outline, capitulos, capituloActua
   // Mostrar animación de carga mientras se genera el outline
   if (generandoOutline) {
     return (
-      <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 mb-8">
-        <div className="flex flex-col items-center justify-center space-y-6">
+      <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-12 mb-6 md:mb-8">
+        <div className="flex flex-col items-center justify-center space-y-4 md:space-y-6">
           {/* Icono animado */}
           <div className="relative">
-            <BookOpen className="w-20 h-20 text-purple-600 dark:text-purple-400 animate-pulse" />
-            <Sparkles className="w-8 h-8 text-yellow-500 absolute -top-2 -right-2 animate-spin" />
+            <BookOpen className="w-16 md:w-20 h-16 md:h-20 text-purple-600 dark:text-purple-400 animate-pulse" />
+            <Sparkles className="w-6 md:w-8 h-6 md:h-8 text-yellow-500 absolute -top-2 -right-2 animate-spin" />
           </div>
 
           {/* Texto de carga */}
           <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white px-4">
               Generando el outline de tu libro...
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 px-4">
               Creando la estructura narrativa y planificando los capítulos
             </p>
           </div>
@@ -41,18 +41,18 @@ export default function VisualizadorProgreso({ outline, capitulos, capituloActua
           </div>
 
           {/* Pasos del proceso */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 w-full">
-            <div className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <Loader2 className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-spin" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Analizando tema</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mt-6 md:mt-8 w-full px-4">
+            <div className="flex items-center gap-3 p-3 md:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <Loader2 className="w-4 md:w-5 h-4 md:h-5 text-purple-600 dark:text-purple-400 animate-spin flex-shrink-0" />
+              <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300">Analizando tema</span>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Creando personajes</span>
+            <div className="flex items-center gap-3 p-3 md:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Loader2 className="w-4 md:w-5 h-4 md:h-5 text-blue-600 dark:text-blue-400 animate-spin flex-shrink-0" />
+              <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300">Creando personajes</span>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-              <Loader2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Estructurando arco</span>
+            <div className="flex items-center gap-3 p-3 md:p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+              <Loader2 className="w-4 md:w-5 h-4 md:h-5 text-indigo-600 dark:text-indigo-400 animate-spin flex-shrink-0" />
+              <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300">Estructurando arco</span>
             </div>
           </div>
         </div>
@@ -63,9 +63,9 @@ export default function VisualizadorProgreso({ outline, capitulos, capituloActua
   if (!outline) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-        Generando: {outline.titulo}
+    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6 md:mb-8">
+      <h3 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        Generando: <span className="block sm:inline mt-1 sm:mt-0">{outline.titulo}</span>
       </h3>
 
       {/* Barra de progreso general */}

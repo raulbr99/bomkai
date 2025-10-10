@@ -326,48 +326,48 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-4 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header con navegación */}
-        <header className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-12 h-12 text-blue-600" />
+        <header className="mb-6 md:mb-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <BookOpen className="w-8 md:w-12 h-8 md:h-12 text-blue-600 flex-shrink-0" />
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
                   Bomkai
                 </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 mt-1">
                   Crea libros completos con IA
                 </p>
               </div>
             </div>
 
             {/* Navegación */}
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setVistaActual('generador')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base ${
                   vistaActual === 'generador'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
-                <BookOpen className="w-5 h-5" />
-                Generar
+                <BookOpen className="w-4 md:w-5 h-4 md:h-5" />
+                <span className="hidden sm:inline">Generar</span>
               </button>
               <button
                 type="button"
                 onClick={() => setVistaActual('biblioteca')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base ${
                   vistaActual === 'biblioteca'
                     ? 'bg-purple-600 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
-                <Library className="w-5 h-5" />
-                Biblioteca
+                <Library className="w-4 md:w-5 h-4 md:h-5" />
+                <span className="hidden sm:inline">Biblioteca</span>
               </button>
             </div>
           </div>
