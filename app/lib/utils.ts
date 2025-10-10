@@ -49,7 +49,7 @@ export function validarConfiguracion(config: ConfiguracionLibro): { valido: bool
 }
 
 /**
- * Exporta el libro en diferentes formatos
+ * Exporta el libro en formato TXT
  */
 export function exportarLibro(
   titulo: string,
@@ -59,22 +59,12 @@ export function exportarLibro(
   configuracion: ConfiguracionLibro
 ): string {
   const capitulosCompletados = capitulos.filter(cap => cap.estado === 'completado');
-  
-  const palabrasTotales = capitulosCompletados.reduce((total, cap) => total + cap.palabras, 0);
-  
-  switch (formato) {
-    case 'txt':
-      return exportarTXT(titulo, sinopsis, capitulosCompletados);
-    case 'md':
-      return exportarMarkdown(titulo, sinopsis, capitulosCompletados, configuracion);
-    case 'json':
-      return exportarJSON(titulo, sinopsis, capitulosCompletados, configuracion, palabrasTotales);
-    case 'epub':
-      // EPUB se maneja a través del endpoint API
-      throw new Error('La exportación a EPUB se maneja a través del endpoint /api/exportar-epub');
-    default:
-      throw new Error(`Formato de exportación no soportado: ${formato}`);
+
+  if (formato !== 'txt') {
+    throw new Error('Solo se soporta formato TXT en esta función. Usa exportarEPUB o exportarPDF para otros formatos.');
   }
+
+  return exportarTXT(titulo, sinopsis, capitulosCompletados);
 }
 
 /**
@@ -100,64 +90,6 @@ function exportarTXT(titulo: string, sinopsis: string, capitulos: Capitulo[]): s
 }
 
 /**
- * Exporta a formato Markdown
- */
-function exportarMarkdown(
-  titulo: string,
-  sinopsis: string,
-  capitulos: Capitulo[],
-  configuracion: ConfiguracionLibro
-): string {
-  let contenido = '';
-
-  contenido += `# ${titulo}\n\n`;
-  contenido += `**Género:** ${configuracion.genero} | `;
-  contenido += `**Estilo:** ${configuracion.estiloEscritura} | `;
-  contenido += `**Tono:** ${configuracion.tono}\n\n`;
-  contenido += `## Sinopsis\n\n${sinopsis}\n\n`;
-  contenido += `---\n\n`;
-
-  for (const capitulo of capitulos) {
-    contenido += `## Capítulo ${capitulo.numero}: ${capitulo.titulo}\n\n`;
-    contenido += `${capitulo.contenido}\n\n`;
-    contenido += `---\n\n`;
-  }
-
-  return contenido;
-}
-
-/**
- * Exporta a formato JSON
- */
-function exportarJSON(
-  titulo: string,
-  sinopsis: string,
-  capitulos: Capitulo[],
-  configuracion: ConfiguracionLibro,
-  palabrasTotales: number
-): string {
-  const exportacion: ExportacionLibro = {
-    titulo,
-    sinopsis,
-    capitulos: capitulos.map(cap => ({
-      numero: cap.numero,
-      titulo: cap.titulo,
-      contenido: cap.contenido
-    })),
-    metadata: {
-      genero: configuracion.genero,
-      estilo: configuracion.estiloEscritura,
-      tono: configuracion.tono,
-      audiencia: configuracion.audienciaObjetivo,
-      palabrasTotales,
-      fechaGeneracion: new Date().toISOString()
-    }
-  };
-
-  return JSON.stringify(exportacion, null, 2);
-}
-
-/**
  * Descarga un archivo en el navegador
  */
 export function descargarArchivo(contenido: string, nombreArchivo: string, tipoMIME: string) {
@@ -172,6 +104,9 @@ export function descargarArchivo(contenido: string, nombreArchivo: string, tipoM
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Exporta el libro a formato EPUB
+ */
 export async function exportarEPUB(
   titulo: string,
   sinopsis: string,
@@ -199,7 +134,7 @@ export async function exportarEPUB(
 
     // Obtener el blob del archivo EPUB
     const blob = await response.blob();
-    
+
     // Crear URL para descarga
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -211,6 +146,52 @@ export async function exportarEPUB(
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Error exportando EPUB:', error);
+    throw error;
+  }
+}
+
+/**
+ * Exporta el libro a formato PDF
+ */
+export async function exportarPDF(
+  titulo: string,
+  sinopsis: string,
+  capitulos: Capitulo[],
+  configuracion: ConfiguracionLibro
+): Promise<void> {
+  try {
+    const response = await fetch('/api/exportar-pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        titulo,
+        sinopsis,
+        capitulos,
+        configuracion,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al generar PDF');
+    }
+
+    // Obtener el blob del archivo PDF
+    const blob = await response.blob();
+
+    // Crear URL para descarga
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error exportando PDF:', error);
     throw error;
   }
 }

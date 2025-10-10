@@ -120,7 +120,7 @@ export interface RespuestaRevision {
 }
 
 // Formato de exportación
-export type FormatoExportacion = 'txt' | 'md' | 'json' | 'epub';
+export type FormatoExportacion = 'txt' | 'epub' | 'pdf';
 
 export interface ExportacionLibro {
   titulo: string;
