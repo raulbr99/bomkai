@@ -1,16 +1,65 @@
 'use client';
 
 import type { Capitulo, Outline } from '@/lib/types';
-import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, BookOpen, Sparkles } from 'lucide-react';
 
 interface Props {
   outline: Outline | null;
   capitulos: Capitulo[];
   capituloActual: number;
   progreso: number;
+  generandoOutline?: boolean;
 }
 
-export default function VisualizadorProgreso({ outline, capitulos, capituloActual, progreso }: Props) {
+export default function VisualizadorProgreso({ outline, capitulos, capituloActual, progreso, generandoOutline = false }: Props) {
+  // Mostrar animación de carga mientras se genera el outline
+  if (generandoOutline) {
+    return (
+      <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 mb-8">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          {/* Icono animado */}
+          <div className="relative">
+            <BookOpen className="w-20 h-20 text-purple-600 dark:text-purple-400 animate-pulse" />
+            <Sparkles className="w-8 h-8 text-yellow-500 absolute -top-2 -right-2 animate-spin" />
+          </div>
+
+          {/* Texto de carga */}
+          <div className="text-center space-y-2">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Generando el outline de tu libro...
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Creando la estructura narrativa y planificando los capítulos
+            </p>
+          </div>
+
+          {/* Barra de carga indeterminada */}
+          <div className="w-full max-w-md">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 rounded-full animate-[loading_2s_ease-in-out_infinite] bg-[length:200%_100%]" />
+            </div>
+          </div>
+
+          {/* Pasos del proceso */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 w-full">
+            <div className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <Loader2 className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-spin" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">Analizando tema</span>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">Creando personajes</span>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+              <Loader2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">Estructurando arco</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!outline) return null;
 
   return (

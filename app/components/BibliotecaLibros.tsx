@@ -3,11 +3,18 @@
 import { useState, useEffect } from 'react';
 import type { LibroGuardado } from '@/lib/types';
 import { obtenerLibros, eliminarLibro, ordenarLibros, buscarLibros, obtenerEstadisticas } from '@/lib/biblioteca';
-import { BookOpen, Trash2, Eye, Download, Search, SortAsc, BarChart3 } from 'lucide-react';
+import { BookOpen, Trash2, Eye, Download, Search, SortAsc, BarChart3, Loader2 } from 'lucide-react';
 
 interface Props {
   onVerLibro: (libro: LibroGuardado) => void;
   onExportarLibro: (libro: LibroGuardado) => void;
+}
+
+interface Estadisticas {
+  totalLibros: number;
+  totalPalabras: number;
+  totalCapitulos: number;
+  generoMasComun: string;
 }
 
 export default function BibliotecaLibros({ onVerLibro, onExportarLibro }: Props) {
@@ -16,34 +23,52 @@ export default function BibliotecaLibros({ onVerLibro, onExportarLibro }: Props)
   const [busqueda, setBusqueda] = useState('');
   const [ordenamiento, setOrdenamiento] = useState<'fecha' | 'titulo' | 'palabras'>('fecha');
   const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const [estadisticas, setEstadisticas] = useState<Estadisticas>({
+    totalLibros: 0,
+    totalPalabras: 0,
+    totalCapitulos: 0,
+    generoMasComun: 'N/A',
+  });
 
   useEffect(() => {
     cargarLibros();
+    cargarEstadisticas();
   }, []);
 
   useEffect(() => {
     if (busqueda.trim()) {
-      const resultados = buscarLibros(busqueda);
+      const resultados = buscarLibros(libros, busqueda);
       setLibrosFiltrados(ordenarLibros(resultados, ordenamiento));
     } else {
       setLibrosFiltrados(ordenarLibros(libros, ordenamiento));
     }
   }, [busqueda, libros, ordenamiento]);
 
-  const cargarLibros = () => {
-    const librosGuardados = obtenerLibros();
+  const cargarLibros = async () => {
+    setCargando(true);
+    const librosGuardados = await obtenerLibros();
     setLibros(librosGuardados);
     setLibrosFiltrados(ordenarLibros(librosGuardados, ordenamiento));
+    setCargando(false);
   };
 
-  const handleEliminar = (id: string) => {
+  const cargarEstadisticas = async () => {
+    const stats = await obtenerEstadisticas();
+    setEstadisticas(stats);
+  };
+
+  const handleEliminar = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este libro?')) {
-      eliminarLibro(id);
-      cargarLibros();
+      const exito = await eliminarLibro(id);
+      if (exito) {
+        await cargarLibros();
+        await cargarEstadisticas();
+      } else {
+        alert('Error eliminando el libro. Intenta de nuevo.');
+      }
     }
   };
-
-  const estadisticas = obtenerEstadisticas();
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -129,7 +154,17 @@ export default function BibliotecaLibros({ onVerLibro, onExportarLibro }: Props)
       </div>
 
       {/* Lista de libros */}
-      {librosFiltrados.length === 0 ? (
+      {cargando ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
+          <Loader2 className="w-16 h-16 text-purple-600 dark:text-purple-400 mx-auto mb-4 animate-spin" />
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Cargando biblioteca...
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400">
+            Obteniendo tus libros de la base de datos
+          </p>
+        </div>
+      ) : librosFiltrados.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">

@@ -289,18 +289,23 @@ export default function Home() {
   const [libroViendoDetalle, setLibroViendoDetalle] = useState<LibroGuardado | null>(null);
 
   // Guardar libro en biblioteca
-  const handleGuardarEnBiblioteca = () => {
+  const handleGuardarEnBiblioteca = async () => {
     if (!estado.outline || !estado.configuracion) return;
 
     try {
-      guardarLibro(
+      const libro = await guardarLibro(
         estado.outline.titulo,
         estado.outline.sinopsis,
         estado.configuracion,
         estado.outline,
         estado.capitulos
       );
-      alert('¡Libro guardado en la biblioteca!');
+
+      if (libro) {
+        alert('¡Libro guardado en la biblioteca!');
+      } else {
+        alert('Error guardando el libro. Verifica la conexión a la base de datos.');
+      }
     } catch (error) {
       alert('Error al guardar el libro');
       console.error(error);
@@ -433,6 +438,7 @@ export default function Home() {
             capitulos={estado.capitulos}
             capituloActual={estado.capituloActual}
             progreso={estado.progreso}
+            generandoOutline={estado.etapa === 'generando-outline'}
           />
         )}
 

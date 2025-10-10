@@ -1,17 +1,19 @@
 import type { LibroGuardado, Capitulo, ConfiguracionLibro, Outline } from './types';
 
-const BIBLIOTECA_KEY = 'bomkai_biblioteca';
-
 /**
  * Obtiene todos los libros guardados de la biblioteca
  */
-export function obtenerLibros(): LibroGuardado[] {
-  if (typeof window === 'undefined') return [];
-
+export async function obtenerLibros(): Promise<LibroGuardado[]> {
   try {
-    const data = localStorage.getItem(BIBLIOTECA_KEY);
-    if (!data) return [];
-    return JSON.parse(data);
+    const response = await fetch('/api/libros');
+    const data = await response.json();
+
+    if (!data.exito) {
+      console.error('Error obteniendo libros:', data.error);
+      return [];
+    }
+
+    return data.libros;
   } catch (error) {
     console.error('Error obteniendo libros:', error);
     return [];
@@ -21,82 +23,80 @@ export function obtenerLibros(): LibroGuardado[] {
 /**
  * Obtiene un libro específico por su ID
  */
-export function obtenerLibroPorId(id: string): LibroGuardado | null {
-  const libros = obtenerLibros();
+export async function obtenerLibroPorId(id: string): Promise<LibroGuardado | null> {
+  const libros = await obtenerLibros();
   return libros.find(libro => libro.id === id) || null;
 }
 
 /**
  * Guarda un nuevo libro en la biblioteca
  */
-export function guardarLibro(
+export async function guardarLibro(
   titulo: string,
   sinopsis: string,
   configuracion: ConfiguracionLibro,
   outline: Outline,
   capitulos: Capitulo[]
-): LibroGuardado {
-  const libros = obtenerLibros();
+): Promise<LibroGuardado | null> {
+  try {
+    const response = await fetch('/api/libros', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        titulo,
+        sinopsis,
+        configuracion,
+        outline,
+        capitulos,
+      }),
+    });
 
-  const palabrasTotales = capitulos
-    .filter(cap => cap.estado === 'completado')
-    .reduce((total, cap) => total + cap.palabras, 0);
+    const data = await response.json();
 
-  const nuevoLibro: LibroGuardado = {
-    id: generarId(),
-    titulo,
-    sinopsis,
-    configuracion,
-    outline,
-    capitulos: capitulos.filter(cap => cap.estado === 'completado'),
-    fechaCreacion: new Date().toISOString(),
-    fechaModificacion: new Date().toISOString(),
-    palabrasTotales,
-  };
+    if (!data.exito) {
+      console.error('Error guardando libro:', data.error);
+      return null;
+    }
 
-  libros.push(nuevoLibro);
-  localStorage.setItem(BIBLIOTECA_KEY, JSON.stringify(libros));
-
-  return nuevoLibro;
+    return data.libro;
+  } catch (error) {
+    console.error('Error guardando libro:', error);
+    return null;
+  }
 }
 
 /**
  * Actualiza un libro existente
+ * (Nota: Esta funcionalidad requiere endpoint PUT en /api/libros - no implementado aún)
  */
-export function actualizarLibro(id: string, datos: Partial<LibroGuardado>): boolean {
-  const libros = obtenerLibros();
-  const index = libros.findIndex(libro => libro.id === id);
-
-  if (index === -1) return false;
-
-  libros[index] = {
-    ...libros[index],
-    ...datos,
-    fechaModificacion: new Date().toISOString(),
-  };
-
-  localStorage.setItem(BIBLIOTECA_KEY, JSON.stringify(libros));
-  return true;
+export async function actualizarLibro(id: string, datos: Partial<LibroGuardado>): Promise<boolean> {
+  console.warn('actualizarLibro no está implementado con API');
+  return false;
 }
 
 /**
  * Elimina un libro de la biblioteca
  */
-export function eliminarLibro(id: string): boolean {
-  const libros = obtenerLibros();
-  const librosFiltrados = libros.filter(libro => libro.id !== id);
+export async function eliminarLibro(id: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/libros?id=${id}`, {
+      method: 'DELETE',
+    });
 
-  if (libros.length === librosFiltrados.length) return false;
-
-  localStorage.setItem(BIBLIOTECA_KEY, JSON.stringify(librosFiltrados));
-  return true;
+    const data = await response.json();
+    return data.exito;
+  } catch (error) {
+    console.error('Error eliminando libro:', error);
+    return false;
+  }
 }
 
 /**
- * Busca libros por título o sinopsis
+ * Busca libros por título o sinopsis (búsqueda en cliente)
  */
-export function buscarLibros(query: string): LibroGuardado[] {
-  const libros = obtenerLibros();
+export function buscarLibros(libros: LibroGuardado[], query: string): LibroGuardado[] {
   const queryLower = query.toLowerCase();
 
   return libros.filter(libro =>
@@ -132,76 +132,56 @@ export function ordenarLibros(
 /**
  * Exporta la biblioteca completa como JSON
  */
-export function exportarBiblioteca(): string {
-  const libros = obtenerLibros();
+export async function exportarBiblioteca(): Promise<string> {
+  const libros = await obtenerLibros();
   return JSON.stringify(libros, null, 2);
 }
 
 /**
- * Importa libros desde un JSON
+ * Importa libros desde un JSON (no implementado con API - requiere bulk insert)
  */
-export function importarBiblioteca(jsonData: string): boolean {
-  try {
-    const librosImportados = JSON.parse(jsonData) as LibroGuardado[];
-
-    // Validar estructura básica
-    if (!Array.isArray(librosImportados)) {
-      throw new Error('Formato inválido');
-    }
-
-    const librosActuales = obtenerLibros();
-    const librosNuevos = librosImportados.filter(
-      libroNuevo => !librosActuales.some(libro => libro.id === libroNuevo.id)
-    );
-
-    const bibliotecaActualizada = [...librosActuales, ...librosNuevos];
-    localStorage.setItem(BIBLIOTECA_KEY, JSON.stringify(bibliotecaActualizada));
-
-    return true;
-  } catch (error) {
-    console.error('Error importando biblioteca:', error);
-    return false;
-  }
+export async function importarBiblioteca(jsonData: string): Promise<boolean> {
+  console.warn('importarBiblioteca no está implementado con API');
+  return false;
 }
 
 /**
  * Obtiene estadísticas de la biblioteca
  */
-export function obtenerEstadisticas() {
-  const libros = obtenerLibros();
+export async function obtenerEstadisticas() {
+  try {
+    const response = await fetch('/api/libros/estadisticas');
+    const data = await response.json();
 
-  const totalLibros = libros.length;
-  const totalPalabras = libros.reduce((sum, libro) => sum + libro.palabrasTotales, 0);
-  const totalCapitulos = libros.reduce((sum, libro) => sum + libro.capitulos.length, 0);
+    if (!data.exito) {
+      console.error('Error obteniendo estadísticas:', data.error);
+      return {
+        totalLibros: 0,
+        totalPalabras: 0,
+        totalCapitulos: 0,
+        promedioCapitulosPorLibro: 0,
+        promedioPalabrasPorLibro: 0,
+        generoMasComun: 'N/A',
+      };
+    }
 
-  const generosCuenta = libros.reduce((acc, libro) => {
-    acc[libro.configuracion.genero] = (acc[libro.configuracion.genero] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  return {
-    totalLibros,
-    totalPalabras,
-    totalCapitulos,
-    promedioCapitulosPorLibro: totalLibros > 0 ? Math.round(totalCapitulos / totalLibros) : 0,
-    promedioPalabrasPorLibro: totalLibros > 0 ? Math.round(totalPalabras / totalLibros) : 0,
-    generoMasComun: Object.entries(generosCuenta).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A',
-    distribucionGeneros: generosCuenta,
-  };
+    return data.estadisticas;
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    return {
+      totalLibros: 0,
+      totalPalabras: 0,
+      totalCapitulos: 0,
+      promedioCapitulosPorLibro: 0,
+      promedioPalabrasPorLibro: 0,
+      generoMasComun: 'N/A',
+    };
+  }
 }
 
 /**
- * Genera un ID único para un libro
- */
-function generarId(): string {
-  return `libro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * Limpia la biblioteca (útil para testing)
+ * Limpia la biblioteca (útil para testing - no implementado con API)
  */
 export function limpiarBiblioteca(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(BIBLIOTECA_KEY);
-  }
+  console.warn('limpiarBiblioteca no está implementado con API');
 }
