@@ -9,7 +9,7 @@ import type {
   AudienciaObjetivo,
 } from '@/lib/types';
 import { validarConfiguracion } from '@/lib/utils';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Sparkles } from 'lucide-react';
 
 interface Props {
   onSubmit: (configuracion: ConfiguracionLibro) => void;
@@ -24,6 +24,7 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
   const [tono, setTono] = useState<Tono>('Casual');
   const [audienciaObjetivo, setAudienciaObjetivo] = useState<AudienciaObjetivo>('Adultos');
   const [error, setError] = useState<string | null>(null);
+  const [mejorandoPrompt, setMejorandoPrompt] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +48,36 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
     onSubmit(configuracion);
   };
 
+  const handleMejorarPrompt = async () => {
+    if (!tema.trim()) {
+      setError('Escribe una descripción antes de mejorarla');
+      return;
+    }
+
+    setMejorandoPrompt(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/mejorar-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: tema }),
+      });
+
+      const data = await response.json();
+
+      if (!data.exito) {
+        throw new Error(data.error || 'Error mejorando el prompt');
+      }
+
+      setTema(data.promptMejorado);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Error desconocido');
+    } finally {
+      setMejorandoPrompt(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 lg:p-8">
@@ -60,18 +91,39 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Tema */}
           <div>
-            <label htmlFor="tema" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Descripción o Historia *
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="tema" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Descripción o Historia *
+              </label>
+              <button
+                type="button"
+                onClick={handleMejorarPrompt}
+                disabled={mejorandoPrompt || generando || !tema.trim()}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Mejorar descripción con IA"
+              >
+                {mejorandoPrompt ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-purple-600 dark:border-purple-400 border-t-transparent rounded-full animate-spin" />
+                    <span>Mejorando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Mejorar</span>
+                  </>
+                )}
+              </button>
+            </div>
             <textarea
               id="tema"
               value={tema}
               onChange={(e) => setTema(e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"
-              placeholder="Describe tu historia en detalle: personajes, trama, ambientación, conflicto principal, etc. Cuanto más detallado, mejor será el resultado.&#10;&#10;Ejemplo: 'Una joven hechicera llamada Elena descubre que es la última heredera de un antiguo linaje mágico. Debe recuperar cinco artefactos perdidos mientras es perseguida por una orden oscura que busca eliminar toda la magia del mundo. Su viaje la llevará desde las montañas nevadas del norte hasta los desiertos del sur, donde descubrirá secretos sobre su familia y su verdadero destino.'"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-y min-h-[100px]"
+              placeholder="Describe tu historia en detalle..."
               required
-              disabled={generando}
+              disabled={generando || mejorandoPrompt}
             />
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               💡 Tip: Incluye personajes, conflicto, ambientación y cualquier detalle específico que quieras en tu libro
