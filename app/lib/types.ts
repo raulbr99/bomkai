@@ -139,3 +139,17 @@ export interface ExportacionLibro {
     fechaGeneracion: string;
   };
 }
+
+// Biblioteca de libros guardados
+export interface LibroGuardado {
+  id: string;
+  titulo: string;
+  sinopsis: string;
+  configuracion: ConfiguracionLibro;
+  outline: Outline;
+  capitulos: Capitulo[];
+  fechaCreacion: string;
+  fechaModificacion: string;
+  palabrasTotales: number;
+  portada?: string; // URL o base64 de imagen de portada
+}

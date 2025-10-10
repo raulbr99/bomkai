@@ -1,14 +1,17 @@
 'use client';
 
 import { useReducer, useState } from 'react';
-import type { Estado, Accion, ConfiguracionLibro, Capitulo } from '@/lib/types';
-import { generarResumen, contarPalabras, calcularProgreso } from '@/lib/utils';
+import type { Estado, Accion, ConfiguracionLibro, Capitulo, LibroGuardado, FormatoExportacion } from '@/lib/types';
+import { generarResumen, contarPalabras, calcularProgreso, exportarLibro, descargarArchivo, exportarEPUB } from '@/lib/utils';
+import { guardarLibro } from '@/lib/biblioteca';
 import FormularioConfiguracion from '@/components/FormularioConfiguracion';
 import VisualizadorProgreso from '@/components/VisualizadorProgreso';
 import PreviewCapitulos from '@/components/PreviewCapitulos';
 import EditorCapitulo from '@/components/EditorCapitulo';
 import ExportadorLibro from '@/components/ExportadorLibro';
-import { BookOpen, RefreshCw } from 'lucide-react';
+import BibliotecaLibros from '@/components/BibliotecaLibros';
+import DetalleLibro from '@/components/DetalleLibro';
+import { BookOpen, RefreshCw, Library, Save } from 'lucide-react';
 
 // Estado inicial
 const estadoInicial: Estado = {
@@ -282,22 +285,130 @@ export default function Home() {
   };
 
   const [capituloEditando, setCapituloEditando] = useState<Capitulo | null>(null);
+  const [vistaActual, setVistaActual] = useState<'generador' | 'biblioteca' | 'detalle'>('generador');
+  const [libroViendoDetalle, setLibroViendoDetalle] = useState<LibroGuardado | null>(null);
+
+  // Guardar libro en biblioteca
+  const handleGuardarEnBiblioteca = () => {
+    if (!estado.outline || !estado.configuracion) return;
+
+    try {
+      guardarLibro(
+        estado.outline.titulo,
+        estado.outline.sinopsis,
+        estado.configuracion,
+        estado.outline,
+        estado.capitulos
+      );
+      alert('¡Libro guardado en la biblioteca!');
+    } catch (error) {
+      alert('Error al guardar el libro');
+      console.error(error);
+    }
+  };
+
+  // Ver detalle de libro desde biblioteca
+  const handleVerLibro = (libro: LibroGuardado) => {
+    setLibroViendoDetalle(libro);
+    setVistaActual('detalle');
+  };
+
+  // Exportar libro desde biblioteca
+  const handleExportarLibroDesdeBiblioteca = (libro: LibroGuardado) => {
+    // Mostrar opciones de exportación
+    const formato = prompt('¿En qué formato deseas exportar? (txt/md/json/epub)') as FormatoExportacion;
+    if (!formato || !['txt', 'md', 'json', 'epub'].includes(formato)) {
+      alert('Formato no válido');
+      return;
+    }
+
+    if (formato === 'epub') {
+      exportarEPUB(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
+    } else {
+      const contenido = exportarLibro(
+        libro.titulo,
+        libro.sinopsis,
+        libro.capitulos,
+        formato,
+        libro.configuracion
+      );
+
+      const extension = formato;
+      const tipoMIME = formato === 'json' ? 'application/json' : formato === 'md' ? 'text/markdown' : 'text/plain';
+      const nombreArchivo = `${libro.titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
+
+      descargarArchivo(contenido, nombreArchivo, tipoMIME);
+    }
+  };
 
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <BookOpen className="w-12 h-12 text-blue-600" />
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-              Generador de Libros con IA
-            </h1>
+        {/* Header con navegación */}
+        <header className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-12 h-12 text-blue-600" />
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+                  Generador de Libros con IA
+                </h1>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+                  Crea libros completos utilizando Claude AI
+                </p>
+              </div>
+            </div>
+
+            {/* Navegación */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setVistaActual('generador')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  vistaActual === 'generador'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <BookOpen className="w-5 h-5" />
+                Generar
+              </button>
+              <button
+                type="button"
+                onClick={() => setVistaActual('biblioteca')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  vistaActual === 'biblioteca'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <Library className="w-5 h-5" />
+                Biblioteca
+              </button>
+            </div>
           </div>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
-            Crea libros completos utilizando Claude AI
-          </p>
         </header>
+
+        {/* Vista de Biblioteca */}
+        {vistaActual === 'biblioteca' && (
+          <BibliotecaLibros
+            onVerLibro={handleVerLibro}
+            onExportarLibro={handleExportarLibroDesdeBiblioteca}
+          />
+        )}
+
+        {/* Vista de Detalle de Libro */}
+        {vistaActual === 'detalle' && libroViendoDetalle && (
+          <DetalleLibro
+            libro={libroViendoDetalle}
+            onVolver={() => setVistaActual('biblioteca')}
+            onExportar={handleExportarLibroDesdeBiblioteca}
+          />
+        )}
+
+        {/* Vista de Generador */}
+        {vistaActual === 'generador' && (
+          <>
 
         {/* Error */}
         {estado.error && (
@@ -353,13 +464,21 @@ export default function Home() {
           </div>
         )}
 
-        {/* Botón Reiniciar */}
+        {/* Botones de acción para libro completado */}
         {estado.etapa === 'completado' && (
-          <div className="mt-8 text-center">
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              type="button"
+              onClick={handleGuardarEnBiblioteca}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+            >
+              <Save className="w-5 h-5" />
+              Guardar en Biblioteca
+            </button>
             <button
               type="button"
               onClick={() => dispatch({ tipo: 'REINICIAR' })}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
             >
               <RefreshCw className="w-5 h-5" />
               Generar Nuevo Libro
@@ -374,6 +493,8 @@ export default function Home() {
           onGuardar={handleEditarCapitulo}
           onMejorar={handleMejorarCapitulo}
         />
+          </>
+        )}
       </div>
     </div>
   );
