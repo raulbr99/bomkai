@@ -318,37 +318,11 @@ export default function Home() {
     setVistaActual('detalle');
   };
 
-  // Exportar libro desde biblioteca
-  const handleExportarLibroDesdeBiblioteca = async (libro: LibroGuardado) => {
-    // Mostrar opciones de exportación
-    const formato = prompt('¿En qué formato deseas exportar? (txt/epub/pdf)') as FormatoExportacion;
-    if (!formato || !['txt', 'epub', 'pdf'].includes(formato)) {
-      alert('Formato no válido. Opciones: txt, epub, pdf');
-      return;
-    }
-
-    try {
-      if (formato === 'epub') {
-        await exportarEPUB(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
-      } else if (formato === 'pdf') {
-        await exportarPDF(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
-      } else {
-        // TXT
-        const contenido = exportarLibro(
-          libro.titulo,
-          libro.sinopsis,
-          libro.capitulos,
-          formato,
-          libro.configuracion
-        );
-
-        const nombreArchivo = `${libro.titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
-        descargarArchivo(contenido, nombreArchivo, 'text/plain');
-      }
-    } catch (error) {
-      console.error('Error exportando libro:', error);
-      alert('Error al exportar el libro. Por favor, inténtalo de nuevo.');
-    }
+  // Exportar libro desde biblioteca (se maneja en el componente DetalleLibro ahora)
+  const handleExportarLibroDesdeBiblioteca = (libro: LibroGuardado) => {
+    // Esta función ya no se usa porque el export ahora se hace en DetalleLibro con dropdown
+    // Pero la mantenemos por compatibilidad
+    handleVerLibro(libro);
   };
 
   return (
@@ -361,10 +335,10 @@ export default function Home() {
               <BookOpen className="w-12 h-12 text-blue-600" />
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                  Generador de Libros con IA
+                  Bomkai
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
-                  Crea libros completos utilizando Claude AI
+                  Crea libros completos con IA
                 </p>
               </div>
             </div>

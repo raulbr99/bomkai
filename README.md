@@ -1,4 +1,4 @@
-# Generador de Libros con IA - Claude
+# Bomkai - Generador de Libros con IA
 
 Una aplicación completa de Next.js 14+ que genera libros completos usando la API de Claude (Anthropic). Crea historias estructuradas, bien escritas y coherentes con control total sobre el género, estilo, tono y audiencia objetivo.
 
@@ -9,7 +9,8 @@ Una aplicación completa de Next.js 14+ que genera libros completos usando la AP
 - **Control Total**: Configura género, estilo de escritura, tono y audiencia objetivo
 - **Gestión de Contexto**: Mantiene coherencia narrativa a través de todos los capítulos
 - **Edición con IA**: Mejora capítulos con instrucciones específicas usando Claude
-- **Múltiples Formatos de Exportación**: Descarga en TXT, Markdown o JSON
+- **Múltiples Formatos de Exportación**: Descarga en TXT, EPUB o PDF
+- **Biblioteca Personal**: Guarda y gestiona todos tus libros generados en Neon Database
 - **Interfaz Moderna**: UI responsiva con Tailwind CSS y modo oscuro
 - **Seguimiento de Progreso**: Visualización en tiempo real del estado de generación
 

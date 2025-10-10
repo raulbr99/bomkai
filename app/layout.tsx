@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Generador de Libros con IA - Claude",
-  description: "Genera libros completos usando inteligencia artificial con Claude API",
+  title: "Bomkai - Generador de Libros con IA",
+  description: "Crea libros completos usando inteligencia artificial con Claude API",
 };
 
 export default function RootLayout({

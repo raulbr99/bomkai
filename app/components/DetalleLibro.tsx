@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import type { LibroGuardado } from '@/lib/types';
-import { ArrowLeft, Download, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import type { LibroGuardado, FormatoExportacion } from '@/lib/types';
+import { ArrowLeft, Download, BookOpen, ChevronDown, ChevronUp, FileText, File } from 'lucide-react';
+import { exportarLibro, descargarArchivo, exportarEPUB, exportarPDF } from '@/lib/utils';
 
 interface Props {
   libro: LibroGuardado;
@@ -12,9 +13,58 @@ interface Props {
 
 export default function DetalleLibro({ libro, onVolver, onExportar }: Props) {
   const [capituloExpandido, setCapituloExpandido] = useState<number | null>(null);
+  const [dropdownAbierto, setDropdownAbierto] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleCapitulo = (numero: number) => {
     setCapituloExpandido(capituloExpandido === numero ? null : numero);
+  };
+
+  // Cerrar dropdown cuando se hace click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownAbierto(false);
+      }
+    };
+
+    if (dropdownAbierto) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownAbierto]);
+
+  const handleExportarFormato = async (formato: FormatoExportacion) => {
+    setDropdownAbierto(false);
+    setExportando(true);
+
+    try {
+      if (formato === 'epub') {
+        await exportarEPUB(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
+      } else if (formato === 'pdf') {
+        await exportarPDF(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
+      } else {
+        // TXT
+        const contenido = exportarLibro(
+          libro.titulo,
+          libro.sinopsis,
+          libro.capitulos,
+          formato,
+          libro.configuracion
+        );
+        const nombreArchivo = `${libro.titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+        descargarArchivo(contenido, nombreArchivo, 'text/plain');
+      }
+    } catch (error) {
+      console.error('Error exportando:', error);
+      alert('Error al exportar. Por favor, inténtalo de nuevo.');
+    } finally {
+      setExportando(false);
+    }
   };
 
   return (
@@ -76,14 +126,71 @@ export default function DetalleLibro({ libro, onVolver, onExportar }: Props) {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onExportar(libro)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-          >
-            <Download className="w-5 h-5" />
-            Exportar
-          </button>
+          {/* Dropdown de exportación */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setDropdownAbierto(!dropdownAbierto)}
+              disabled={exportando}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {exportando ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Exportando...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5" />
+                  <span>Exportar</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${dropdownAbierto ? 'rotate-180' : ''}`} />
+                </>
+              )}
+            </button>
+
+            {/* Dropdown menu */}
+            {dropdownAbierto && (
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 overflow-hidden">
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => handleExportarFormato('txt')}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">Texto Plano</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">.txt</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleExportarFormato('epub')}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
+                    <BookOpen className="w-5 h-5 text-orange-600" />
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">EPUB</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">.epub</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleExportarFormato('pdf')}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
+                    <File className="w-5 h-5 text-red-600" />
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">PDF</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">.pdf</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 {
-  "name": "generador-libros-claude",
+  "name": "bomkai",
   "version": "1.0.0",
-  "description": "AI Book Generator using Next.js and Claude API",
+  "description": "Bomkai - AI Book Generator using Next.js and Claude API",
   "private": true,
   "scripts": {
     "dev": "next dev",
