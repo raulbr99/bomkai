@@ -1,0 +1,360 @@
+# Claude Code Prompt: Complete AI Book Generator with Next.js & Anthropic API
+
+Create a complete, production-ready Next.js 14+ application that generates full-length books using Claude API (Anthropic). The application should be fully functional, well-documented, and follow modern best practices.
+
+## Project Requirements
+
+### Core Technology Stack
+- **Next.js 14.2+** with App Router (not Pages Router)
+- **TypeScript 5+** with strict mode
+- **React 18+** with modern hooks (useState, useReducer)
+- **Tailwind CSS 3.4+** for styling
+- **@anthropic-ai/sdk** latest version
+- **Lucide React** for icons
+
+### Project Structure
+```
+generador-libros-claude/
+├── app/
+│   ├── api/
+│   │   ├── generar-outline/
+│   │   │   └── route.ts
+│   │   ├── generar-capitulo/
+│   │   │   └── route.ts
+│   │   └── revisar-capitulo/
+│   │       └── route.ts
+│   ├── components/
+│   │   ├── FormularioConfiguracion.tsx
+│   │   ├── VisualizadorProgreso.tsx
+│   │   ├── PreviewCapitulos.tsx
+│   │   ├── EditorCapitulo.tsx
+│   │   └── ExportadorLibro.tsx
+│   ├── lib/
+│   │   ├── types.ts
+│   │   └── utils.ts
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── globals.css
+├── .env.example
+├── .gitignore
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── postcss.config.js
+├── next.config.js
+└── README.md
+```
+
+## Detailed Functionality Requirements
+
+### 1. Book Configuration Form (FormularioConfiguracion.tsx)
+Create a comprehensive form with the following fields:
+- **Theme/Topic** (text input, required) - What the book is about
+- **Genre** (select) - Fiction, Non-Fiction, Fantasy, Sci-Fi, Mystery, Romance, Self-Help, Biography, etc.
+- **Number of Chapters** (number input, 1-50) - How many chapters to generate
+- **Writing Style** (select) - Descriptive, Concise, Poetic, Journalistic, Academic, Conversational
+- **Tone** (select) - Formal, Casual, Humorous, Serious, Inspirational, Dark
+- **Target Audience** (select) - Children, Young Adult, Adult, Academic
+
+### 2. Book Generation Flow
+Implement a multi-step generation process:
+
+**Step 1: Generate Outline**
+- Call `/api/generar-outline` with configuration
+- Claude generates a detailed book structure with:
+  - Book title
+  - Chapter titles and brief descriptions
+  - Main characters (if fiction)
+  - Key themes and arc
+  - Expected word count per chapter
+- Store outline in state
+
+**Step 2: Generate Chapters Sequentially**
+- For each chapter (1 to N):
+  - Call `/api/generar-capitulo` with streaming
+  - Pass full outline + summaries of previous chapters
+  - Stream content in real-time using Server-Sent Events
+  - Update progress bar and chapter content live
+  - Store completed chapter
+  - Generate summary of completed chapter for context
+
+**Step 3: Review & Edit**
+- Display all generated chapters
+- Allow editing individual chapters
+- Call `/api/revisar-capitulo` to improve with AI
+- Option to regenerate individual chapters
+
+### 3. Context Management Strategy
+Implement sophisticated context handling:
+- Maintain a "story bible" with:
+  - Full outline
+  - Character descriptions
+  - Plot points covered
+  - Summaries of previous chapters (last 500 chars each)
+- For each new chapter, include in prompt:
+  - Complete outline
+  - Book configuration (genre, style, tone)
+  - Accumulated context from previous chapters
+  - Specific objectives for current chapter
+
+### 4. API Routes Implementation
+
+**POST /api/generar-outline/route.ts**
+- Accept book configuration
+- Create Claude API call with structured prompt
+- Request JSON response with outline structure
+- Return parsed outline object
+- Handle errors gracefully
+
+**POST /api/generar-capitulo/route.ts**
+- Accept: chapter number, outline, previous context, config
+- Stream response using ReadableStream
+- Use Server-Sent Events format: `data: {json}\n\n`
+- Stream chunks: `{tipo: 'chunk', contenido: string, progreso: number}`
+- Final message: `{tipo: 'completo', contenido: string}`
+- Model: claude-sonnet-4-20250514
+- Max tokens: 4000-8000 depending on chapter length
+
+**POST /api/revisar-capitulo/route.ts**
+- Accept: chapter content, improvement instructions
+- Call Claude to review and improve
+- Return improved chapter text
+- Handle validation
+
+### 5. Frontend Components
+
+**VisualizadorProgreso.tsx**
+- Animated progress bar showing generation progress
+- Current chapter being generated
+- Estimated time remaining
+- Status for each chapter (pending, in-progress, completed, error)
+
+**PreviewCapitulos.tsx**
+- List all generated chapters
+- Show chapter title, word count, preview
+- Click to expand full chapter
+- Edit and regenerate buttons per chapter
+- Export options
+
+**EditorCapitulo.tsx**
+- Modal/drawer component for editing
+- Textarea with chapter content
+- AI improvement section with instructions input
+- Save and regenerate buttons
+- Character/word count display
+
+**ExportadorLibro.tsx**
+- Export full book in multiple formats:
+  - Plain text (.txt)
+  - Markdown (.md)
+  - JSON (with metadata)
+- Include title page with metadata
+- Formatted output with chapter headers
+
+### 6. State Management
+Use useReducer for complex state:
+```typescript
+type Estado = {
+  etapa: 'configuracion' | 'generando-outline' | 'generando-capitulos' | 'completado';
+  configuracion: ConfiguracionLibro | null;
+  outline: Outline | null;
+  capitulos: Capitulo[];
+  capituloActual: number;
+  progreso: number;
+  error: string | null;
+  generando: boolean;
+};
+```
+
+Actions:
+- INICIAR_OUTLINE
+- OUTLINE_COMPLETADO
+- INICIAR_CAPITULO
+- ACTUALIZAR_PROGRESO
+- CAPITULO_COMPLETADO
+- EDITAR_CAPITULO
+- ERROR
+- REINICIAR
+
+### 7. TypeScript Types (lib/types.ts)
+Define comprehensive types:
+- ConfiguracionLibro
+- Outline
+- Capitulo
+- EstadoGeneracion
+- AccionesReducer
+- RespuestaAPI
+
+### 8. Utility Functions (lib/utils.ts)
+- `estimarTokens(texto: string): number` - Estimate token count
+- `formatearCapitulo(capitulo: Capitulo): string` - Format for export
+- `exportarLibro(capitulos: Capitulo[], formato: 'txt' | 'md' | 'json')` - Export logic
+- `validarConfiguracion(config: ConfiguracionLibro): boolean` - Validation
+- `generarResumen(capitulo: string): string` - Create chapter summary
+
+## Claude API Integration Details
+
+### Prompting Strategy
+
+**For Outline Generation:**
+```
+You are a professional book outliner. Create a detailed outline for a book with the following specifications:
+
+- Theme: {tema}
+- Genre: {genero}
+- Style: {estilo}
+- Tone: {tono}
+- Target Audience: {audiencia}
+- Number of Chapters: {numeroCapitulos}
+
+Generate a comprehensive outline including:
+1. Book title
+2. Brief synopsis (200 words)
+3. For each chapter: title, 2-3 sentence description, key events/topics
+4. Main characters (if fiction) with descriptions
+5. Overall story arc or structure
+
+Respond ONLY with valid JSON in this format:
+{
+  "titulo": "string",
+  "sinopsis": "string",
+  "capitulos": [{"numero": 1, "titulo": "string", "descripcion": "string"}],
+  "personajes": [{"nombre": "string", "descripcion": "string"}],
+  "arcoNarrativo": "string"
+}
+```
+
+**For Chapter Generation:**
+```
+You are a skilled author writing chapter {numero} of a book.
+
+BOOK CONTEXT:
+- Title: {titulo}
+- Genre: {genero}
+- Style: {estilo}
+- Tone: {tono}
+- Synopsis: {sinopsis}
+
+CHAPTER OBJECTIVE:
+{descripcionCapitulo}
+
+PREVIOUS CHAPTERS SUMMARY:
+{resumenCapitulosAnteriores}
+
+Write the complete chapter with:
+- Engaging opening
+- Developed content (2000-3000 words)
+- Natural flow from previous chapters
+- Hook for next chapter
+- Consistent style and tone
+
+Write in a narrative, professional manner appropriate for the genre and audience.
+```
+
+### Streaming Implementation
+- Use Anthropic SDK streaming: `client.messages.stream()`
+- Convert to ReadableStream for Next.js API route
+- Frontend: Use EventSource or fetch with streaming
+- Update UI progressively as content arrives
+
+## UI/UX Requirements
+
+### Design Guidelines
+- Modern, clean interface with gradients
+- Dark/light theme compatible
+- Responsive design (mobile-friendly)
+- Loading states for all async operations
+- Error messages with recovery options
+- Toast notifications for success/errors
+- Smooth animations and transitions
+
+### Accessibility
+- Proper semantic HTML
+- ARIA labels where needed
+- Keyboard navigation support
+- Sufficient color contrast
+- Focus indicators
+
+## Configuration Files
+
+### package.json
+Include all necessary dependencies:
+- next (^14.2.0)
+- react (^18.3.0)
+- react-dom (^18.3.0)
+- typescript (^5.6.0)
+- @anthropic-ai/sdk (^0.32.0)
+- tailwindcss (^3.4.0)
+- lucide-react (latest)
+- @types/* for all packages
+
+### .env.example
+```
+ANTHROPIC_API_KEY=your_api_key_here
+```
+
+### tsconfig.json
+- Strict mode enabled
+- Path aliases (@/ for app directory)
+- Modern ES features
+
+### tailwind.config.ts
+- Custom colors and gradients
+- Animation utilities
+- Custom spacing if needed
+
+## Documentation Requirements
+
+### README.md must include:
+1. **Project Overview** - What the app does
+2. **Features List** - All capabilities
+3. **Installation Guide** - Step by step
+4. **Environment Setup** - API key configuration
+5. **Usage Instructions** - How to use the app
+6. **Architecture** - Technical overview
+7. **API Routes Documentation** - Endpoint descriptions
+8. **Cost Estimation** - Approximate API costs
+9. **Troubleshooting** - Common issues and solutions
+10. **Future Improvements** - Ideas for enhancement
+
+## Code Quality Standards
+
+- **Comments**: Add explanatory comments in Spanish for key sections
+- **Error Handling**: Try-catch blocks for all async operations
+- **Validation**: Input validation on both frontend and backend
+- **Type Safety**: No `any` types, use proper TypeScript
+- **Performance**: Optimize re-renders, use React.memo where appropriate
+- **Security**: API key only in backend, sanitize inputs
+- **Clean Code**: Consistent naming, small focused functions
+
+## Testing Considerations
+While full tests aren't required, ensure:
+- Manual testing flow works end-to-end
+- Edge cases handled (empty inputs, API failures, long content)
+- Different book configurations tested
+
+## Important Implementation Notes
+
+1. **Use claude-sonnet-4-20250514 model** - Latest Sonnet model
+2. **Implement proper streaming** - Show content as it generates
+3. **Context window management** - Don't exceed Claude's limits
+4. **Rate limiting awareness** - Handle API rate limits gracefully
+5. **Cost optimization** - Estimate tokens before generation
+6. **User feedback** - Always show what's happening
+7. **Graceful degradation** - Handle partial failures
+
+## Deliverables
+
+Generate a complete, working Next.js application with:
+- ✅ All 21 files specified in structure
+- ✅ Fully functional book generation
+- ✅ Real-time streaming and progress
+- ✅ Chapter editing and regeneration
+- ✅ Multiple export formats
+- ✅ Professional UI with Tailwind
+- ✅ Comprehensive error handling
+- ✅ Complete README documentation
+- ✅ TypeScript with strict types
+- ✅ Ready to run with `npm install && npm run dev`
+
+The final application should be production-ready, well-documented, maintainable, and demonstrate best practices for Next.js 14 App Router development with AI integration.
