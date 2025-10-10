@@ -284,7 +284,22 @@ function construirPromptCapitulo(
     descripcionLength: capituloInfo.descripcion?.length || 0,
   });
 
-  let prompt = `Eres un escritor profesional talentoso escribiendo el Capítulo ${numeroCapitulo} de un libro.
+  // Determinar la posición del capítulo en el arco narrativo
+  const totalCapitulos = outline.capitulos.length;
+  const porcentajeProgreso = Math.round((numeroCapitulo / totalCapitulos) * 100);
+  let etapaArcoNarrativo = '';
+
+  if (porcentajeProgreso <= 25) {
+    etapaArcoNarrativo = 'INICIO/EXPOSICIÓN - Establece el mundo, personajes y conflicto inicial';
+  } else if (porcentajeProgreso <= 50) {
+    etapaArcoNarrativo = 'DESARROLLO ASCENDENTE - Profundiza el conflicto y desarrolla las tramas secundarias';
+  } else if (porcentajeProgreso <= 75) {
+    etapaArcoNarrativo = 'CLÍMAX - Llega al punto de máxima tensión y decisiones críticas';
+  } else {
+    etapaArcoNarrativo = 'RESOLUCIÓN - Resuelve conflictos y cierra arcos narrativos';
+  }
+
+  let prompt = `Eres un escritor profesional talentoso escribiendo el Capítulo ${numeroCapitulo} de ${totalCapitulos} de un libro.
 
 CONTEXTO DEL LIBRO:
 - Título: ${outline.titulo}
@@ -296,6 +311,10 @@ CONTEXTO DEL LIBRO:
 
 ARCO NARRATIVO GENERAL:
 ${outline.arcoNarrativo}
+
+POSICIÓN EN EL ARCO NARRATIVO:
+Este es el capítulo ${numeroCapitulo} de ${totalCapitulos} (${porcentajeProgreso}% del libro).
+Etapa actual: ${etapaArcoNarrativo}
 `;
 
   // Añadir personajes si existen
@@ -306,27 +325,73 @@ ${outline.arcoNarrativo}
     }
   }
 
-  // Añadir resúmenes de capítulos anteriores
+  // Mostrar visión general de todos los capítulos para coherencia
+  prompt += `\nESTRUCTURA COMPLETA DEL LIBRO:\n`;
+  outline.capitulos.forEach((cap) => {
+    const marcador = cap.numero === numeroCapitulo ? '→ [ESTE CAPÍTULO]' : '';
+    prompt += `${cap.numero}. ${cap.titulo}${marcador}\n   ${cap.descripcion}\n`;
+  });
+
+  // Añadir resúmenes de capítulos anteriores con más detalle
   if (resumenesAnteriores.length > 0) {
-    prompt += `\nRESUMEN DE CAPÍTULOS ANTERIORES:\n`;
+    prompt += `\nLO QUE HA SUCEDIDO HASTA AHORA:\n`;
     resumenesAnteriores.forEach((resumen, index) => {
-      prompt += `\nCapítulo ${index + 1}:\n${resumen}\n`;
+      prompt += `\nCapítulo ${index + 1} - "${outline.capitulos[index]?.titulo}":\n${resumen}\n`;
     });
+
+    // Recordatorio de continuidad
+    const ultimoResumen = resumenesAnteriores[resumenesAnteriores.length - 1];
+    prompt += `\n⚠️ IMPORTANTE - CONTINUIDAD NARRATIVA:
+El capítulo anterior terminó con: "${ultimoResumen.slice(-200)}"
+Este capítulo DEBE continuar de manera natural y coherente desde ese punto.
+`;
   }
 
-  prompt += `\nOBJETIVO DEL CAPÍTULO ${numeroCapitulo}:
+  // Añadir el siguiente capítulo para contexto
+  const siguienteCapitulo = outline.capitulos.find(cap => cap.numero === numeroCapitulo + 1);
+  if (siguienteCapitulo) {
+    prompt += `\nPREPARACIÓN PARA EL SIGUIENTE CAPÍTULO:
+El próximo capítulo será: "${siguienteCapitulo.titulo}" - ${siguienteCapitulo.descripcion}
+Asegúrate de que este capítulo prepare el terreno para esa continuación.
+`;
+  }
+
+  prompt += `\nOBJETIVO DE ESTE CAPÍTULO:
 Título: "${capituloInfo.titulo}"
 Descripción: ${capituloInfo.descripcion}
 
-INSTRUCCIONES:
-Escribe el capítulo completo con las siguientes características:
-- Apertura atractiva que enganche al lector
-- Contenido bien desarrollado (2000-3500 palabras aproximadamente)
-- Flujo natural desde los capítulos anteriores (si aplica)
-- Diálogos naturales y descripciones inmersivas
-- Avance de la trama o desarrollo de temas clave
-- Final del capítulo que invite a seguir leyendo
-- Mantén consistencia en estilo, tono y voz narrativa
+INSTRUCCIONES CRÍTICAS:
+1. COHERENCIA NARRATIVA:
+   - Mantén continuidad absoluta con los capítulos anteriores (personajes, eventos, detalles)
+   - Referencia sutilmente eventos previos cuando sea natural
+   - Los personajes deben recordar y actuar según lo sucedido anteriormente
+   - Mantén consistencia en nombres, lugares, fechas y detalles establecidos
+
+2. DESARROLLO DEL CAPÍTULO:
+   - Apertura atractiva que conecte con el capítulo anterior
+   - Contenido bien desarrollado (2000-3500 palabras aproximadamente)
+   - Flujo natural: CADA ESCENA debe conectar lógicamente con la siguiente
+   - Diálogos naturales que reflejen la personalidad establecida de los personajes
+   - Descripciones inmersivas apropiadas al género y tono
+
+3. PROGRESIÓN DE LA TRAMA:
+   - Avanza el arco narrativo principal según la etapa: ${etapaArcoNarrativo}
+   - Cumple con el objetivo específico de este capítulo: ${capituloInfo.descripcion}
+   - Desarrolla o resuelve sub-tramas según corresponda
+   - Final del capítulo que invite a seguir leyendo (pero NO cliffhangers forzados)
+
+4. ESTILO Y CONSISTENCIA:
+   - Mantén el mismo estilo de escritura: ${configuracion.estiloEscritura}
+   - Conserva el tono establecido: ${configuracion.tono}
+   - Voz narrativa consistente con capítulos anteriores
+   - Apropiado para: ${configuracion.audienciaObjetivo}
+
+⚠️ ERRORES COMUNES A EVITAR:
+- NO repitas información ya establecida en capítulos anteriores
+- NO ignores eventos o revelaciones de capítulos previos
+- NO cambies personalidades de personajes sin justificación
+- NO introduzcas elementos contradictorios con la trama establecida
+- NO escribas capítulos aislados; cada uno es parte de un todo coherente
 
 Escribe de manera profesional y apropiada para el género y audiencia especificados. NO incluyas el título del capítulo en tu respuesta, solo el contenido narrativo.
 

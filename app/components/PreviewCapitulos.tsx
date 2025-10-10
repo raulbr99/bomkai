@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Capitulo } from '@/lib/types';
-import { ChevronDown, ChevronUp, Edit, RotateCw } from 'lucide-react';
+import { X, Edit, RotateCw, BookOpen, Clock } from 'lucide-react';
 
 interface Props {
   capitulos: Capitulo[];
@@ -11,11 +11,7 @@ interface Props {
 }
 
 export default function PreviewCapitulos({ capitulos, onEditar, onRegenerar }: Props) {
-  const [expandido, setExpandido] = useState<number | null>(null);
-
-  const toggleExpansion = (numero: number) => {
-    setExpandido(expandido === numero ? null : numero);
-  };
+  const [capituloSeleccionado, setCapituloSeleccionado] = useState<number | null>(null);
 
   const capitulosCompletados = capitulos.filter((c) => c.estado === 'completado');
 
@@ -23,89 +19,144 @@ export default function PreviewCapitulos({ capitulos, onEditar, onRegenerar }: P
     return null;
   }
 
+  const capitulo = capitulosCompletados.find((c) => c.numero === capituloSeleccionado);
+
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto">
       <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
         Capítulos Generados ({capitulosCompletados.length})
       </h3>
 
-      <div className="space-y-4">
-        {capitulosCompletados.map((capitulo) => {
-          const estaExpandido = expandido === capitulo.numero;
-          const preview = capitulo.contenido.slice(0, 300);
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Columna izquierda: Lista de capítulos */}
+        <div className="lg:col-span-4 space-y-3">
+          {capitulosCompletados.map((cap) => {
+            const seleccionado = capituloSeleccionado === cap.numero;
 
-          return (
-            <div
-              key={capitulo.numero}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700"
-            >
-              {/* Header del capítulo */}
-              <div
-                className="p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                onClick={() => toggleExpansion(capitulo.numero)}
+            return (
+              <button
+                key={cap.numero}
+                type="button"
+                onClick={() => setCapituloSeleccionado(cap.numero)}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  seleccionado
+                    ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 shadow-md'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+                }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                      Capítulo {capitulo.numero}: {capitulo.titulo}
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                      seleccionado
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    {cap.numero}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4
+                      className={`font-semibold mb-1 line-clamp-2 ${
+                        seleccionado
+                          ? 'text-blue-900 dark:text-blue-100'
+                          : 'text-gray-900 dark:text-white'
+                      }`}
+                    >
+                      {cap.titulo}
                     </h4>
-                    <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span>{capitulo.palabras.toLocaleString()} palabras</span>
+                    <div
+                      className={`text-xs flex items-center gap-2 ${
+                        seleccionado
+                          ? 'text-blue-700 dark:text-blue-300'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      <span>{cap.palabras.toLocaleString()} palabras</span>
                       <span>•</span>
-                      <span>~{Math.ceil(capitulo.palabras / 200)} min de lectura</span>
+                      <span>{Math.ceil(cap.palabras / 200)} min</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Columna derecha: Contenido del capítulo seleccionado */}
+        <div className="lg:col-span-8">
+          {capituloSeleccionado && capitulo ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              {/* Header del capítulo */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-blue-100 text-sm mb-2">
+                      <BookOpen className="w-4 h-4" />
+                      <span>Capítulo {capitulo.numero}</span>
+                    </div>
+                    <h2 className="text-2xl font-bold mb-3">{capitulo.titulo}</h2>
+                    <div className="flex items-center gap-4 text-sm text-blue-100">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {Math.ceil(capitulo.palabras / 200)} min de lectura
+                      </span>
+                      <span>•</span>
+                      <span>{capitulo.palabras.toLocaleString()} palabras</span>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    className="ml-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    onClick={() => setCapituloSeleccionado(null)}
+                    className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
                   >
-                    {estaExpandido ? (
-                      <ChevronUp className="w-6 h-6" />
-                    ) : (
-                      <ChevronDown className="w-6 h-6" />
-                    )}
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Acciones */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onEditar(capitulo.numero)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRegenerar(capitulo.numero)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                    Regenerar
                   </button>
                 </div>
               </div>
 
-              {/* Preview o contenido completo */}
-              <div className="px-6 pb-4">
-                {estaExpandido ? (
-                  <div className="prose dark:prose-invert max-w-none">
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                      {capitulo.contenido}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-gray-600 dark:text-gray-400 line-clamp-3">
-                    {preview}...
+              {/* Contenido del capítulo */}
+              <div className="p-6 max-h-[600px] overflow-y-auto">
+                <div className="prose dark:prose-invert max-w-none">
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed text-justify">
+                    {capitulo.contenido}
                   </p>
-                )}
-              </div>
-
-              {/* Acciones */}
-              <div className="px-6 pb-6 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => onEditar(capitulo.numero)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  <Edit className="w-4 h-4" />
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onRegenerar(capitulo.numero)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                  <RotateCw className="w-4 h-4" />
-                  Regenerar
-                </button>
+                </div>
               </div>
             </div>
-          );
-        })}
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+              <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Selecciona un capítulo
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Haz clic en un capítulo de la lista para ver su contenido completo
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
