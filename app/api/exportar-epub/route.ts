@@ -227,8 +227,8 @@ p {
     });
 
     const nombreArchivo = `${titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.epub`;
-
-    return new Response(epubBuffer, {
+// Retornar el archivo
+    return new Response(new Uint8Array(epubBuffer), {
       headers: {
         'Content-Type': 'application/epub+zip',
         'Content-Disposition': `attachment; filename="${nombreArchivo}"`,
