@@ -158,38 +158,83 @@ export default function Home() {
         const reader = responseCapitulo.body?.getReader();
         const decoder = new TextDecoder();
         let contenidoCompleto = '';
+        let buffer = ''; // Buffer para acumular datos incompletos
 
         if (reader) {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n\n');
+            // Decodificar el chunk y agregarlo al buffer
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
 
+            // Dividir por líneas completas (terminadas en \n\n)
+            const lines = buffer.split('\n\n');
+
+            // El último elemento puede estar incompleto, lo guardamos para el siguiente chunk
+            buffer = lines.pop() || '';
+
+            // Procesar cada línea completa
             for (const line of lines) {
               if (line.startsWith('data: ')) {
-                const data = JSON.parse(line.slice(6));
+                try {
+                  const jsonStr = line.slice(6).trim();
+                  if (!jsonStr) continue; // Ignorar líneas vacías
 
-                if (data.tipo === 'chunk') {
-                  contenidoCompleto += data.contenido;
-                  dispatch({
-                    tipo: 'ACTUALIZAR_CONTENIDO_CAPITULO',
-                    numero: i,
-                    contenido: contenidoCompleto,
+                  const data = JSON.parse(jsonStr);
+
+                  if (data.tipo === 'chunk') {
+                    contenidoCompleto += data.contenido;
+                    dispatch({
+                      tipo: 'ACTUALIZAR_CONTENIDO_CAPITULO',
+                      numero: i,
+                      contenido: contenidoCompleto,
+                    });
+                  } else if (data.tipo === 'completo') {
+                    const resumen = generarResumen(data.contenido);
+                    resumenesAnteriores.push(resumen);
+                    dispatch({
+                      tipo: 'CAPITULO_COMPLETADO',
+                      numero: i,
+                      contenido: data.contenido,
+                      resumen,
+                    });
+                  } else if (data.tipo === 'error') {
+                    throw new Error(data.contenido);
+                  }
+                } catch (parseError) {
+                  console.error('Error parseando JSON del stream:', {
+                    error: parseError instanceof Error ? parseError.message : 'Error desconocido',
+                    line: line.slice(0, 100), // Solo primeros 100 caracteres para debug
                   });
-                } else if (data.tipo === 'completo') {
-                  const resumen = generarResumen(data.contenido);
-                  resumenesAnteriores.push(resumen);
-                  dispatch({
-                    tipo: 'CAPITULO_COMPLETADO',
-                    numero: i,
-                    contenido: data.contenido,
-                    resumen,
-                  });
-                } else if (data.tipo === 'error') {
-                  throw new Error(data.contenido);
+                  // No lanzamos el error para que el streaming continúe
                 }
+              }
+            }
+          }
+
+          // Procesar cualquier dato restante en el buffer
+          if (buffer.trim()) {
+            const line = buffer.trim();
+            if (line.startsWith('data: ')) {
+              try {
+                const jsonStr = line.slice(6).trim();
+                if (jsonStr) {
+                  const data = JSON.parse(jsonStr);
+                  if (data.tipo === 'completo') {
+                    const resumen = generarResumen(data.contenido);
+                    resumenesAnteriores.push(resumen);
+                    dispatch({
+                      tipo: 'CAPITULO_COMPLETADO',
+                      numero: i,
+                      contenido: data.contenido,
+                      resumen,
+                    });
+                  }
+                }
+              } catch (parseError) {
+                console.error('Error parseando buffer final:', parseError);
               }
             }
           }

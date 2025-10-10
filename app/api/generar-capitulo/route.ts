@@ -168,12 +168,20 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Enviar chunk al cliente
-                const chunk = {
-                  tipo: 'chunk',
-                  contenido: texto,
-                };
-                const data = `data: ${JSON.stringify(chunk)}\n\n`;
-                controller.enqueue(encoder.encode(data));
+                try {
+                  const chunk = {
+                    tipo: 'chunk',
+                    contenido: texto,
+                  };
+                  const jsonString = JSON.stringify(chunk);
+                  const data = `data: ${jsonString}\n\n`;
+                  controller.enqueue(encoder.encode(data));
+                } catch (encodeError) {
+                  console.error('❌ [generar-capitulo] Error codificando chunk:', {
+                    error: encodeError instanceof Error ? encodeError.message : 'Error desconocido',
+                    textoLength: texto.length,
+                  });
+                }
               }
             }
           }
@@ -181,12 +189,21 @@ export async function POST(request: NextRequest) {
           console.log(`✅ [generar-capitulo] Stream completado. Total chunks: ${chunkCount}, contenido final: ${contenidoCompleto.length} caracteres`);
 
           // Enviar mensaje de completado
-          const mensajeFinal = {
-            tipo: 'completo',
-            contenido: contenidoCompleto,
-          };
-          const data = `data: ${JSON.stringify(mensajeFinal)}\n\n`;
-          controller.enqueue(encoder.encode(data));
+          try {
+            const mensajeFinal = {
+              tipo: 'completo',
+              contenido: contenidoCompleto,
+            };
+            const jsonString = JSON.stringify(mensajeFinal);
+            const data = `data: ${jsonString}\n\n`;
+            controller.enqueue(encoder.encode(data));
+            console.log('✅ [generar-capitulo] Mensaje final enviado exitosamente');
+          } catch (finalError) {
+            console.error('❌ [generar-capitulo] Error enviando mensaje final:', {
+              error: finalError instanceof Error ? finalError.message : 'Error desconocido',
+              contenidoLength: contenidoCompleto.length,
+            });
+          }
 
           controller.close();
         } catch (error) {
