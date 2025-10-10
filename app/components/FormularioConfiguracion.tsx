@@ -61,18 +61,21 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
           {/* Tema */}
           <div>
             <label htmlFor="tema" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tema / Tópico *
+              Descripción o Historia *
             </label>
-            <input
-              type="text"
+            <textarea
               id="tema"
               value={tema}
               onChange={(e) => setTema(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              placeholder="Ej: Una aventura épica en un mundo de fantasía medieval"
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"
+              placeholder="Describe tu historia en detalle: personajes, trama, ambientación, conflicto principal, etc. Cuanto más detallado, mejor será el resultado.&#10;&#10;Ejemplo: 'Una joven hechicera llamada Elena descubre que es la última heredera de un antiguo linaje mágico. Debe recuperar cinco artefactos perdidos mientras es perseguida por una orden oscura que busca eliminar toda la magia del mundo. Su viaje la llevará desde las montañas nevadas del norte hasta los desiertos del sur, donde descubrirá secretos sobre su familia y su verdadero destino.'"
               required
               disabled={generando}
             />
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              💡 Tip: Incluye personajes, conflicto, ambientación y cualquier detalle específico que quieras en tu libro
+            </p>
           </div>
 
           {/* Género */}

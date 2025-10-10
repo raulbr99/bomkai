@@ -65,21 +65,37 @@ export async function POST(request: NextRequest) {
  * Construye el prompt para generar el outline del libro
  */
 function construirPromptOutline(config: ConfiguracionLibro): string {
-  return `Eres un profesional creador de esquemas de libros. Crea un esquema detallado para un libro con las siguientes especificaciones:
+  return `Eres un profesional creador de esquemas de libros y guionista experto. Vas a crear un esquema detallado para un libro basado en la siguiente descripción del usuario.
 
-- Tema: ${config.tema}
+DESCRIPCIÓN/HISTORIA DEL USUARIO:
+"${config.tema}"
+
+ESPECIFICACIONES TÉCNICAS:
 - Género: ${config.genero}
 - Estilo de escritura: ${config.estiloEscritura}
 - Tono: ${config.tono}
 - Audiencia objetivo: ${config.audienciaObjetivo}
 - Número de capítulos: ${config.numeroCapitulos}
 
+INSTRUCCIONES:
+1. Analiza cuidadosamente la descripción proporcionada por el usuario
+2. Extrae personajes, trama, conflictos y elementos clave mencionados
+3. Usa estos elementos como base fundamental para crear el esquema
+4. Si el usuario menciona nombres específicos, úsalos exactamente como se proporcionaron
+5. Respeta cualquier detalle específico mencionado (lugares, objetos, eventos, relaciones)
+6. Si falta información, complétala de manera coherente con lo descrito
+
 Genera un esquema completo que incluya:
-1. Título del libro (creativo y atractivo)
-2. Sinopsis breve (aproximadamente 200 palabras)
-3. Para cada capítulo: título descriptivo, descripción de 2-3 oraciones sobre eventos clave o temas
-4. Personajes principales (si aplica para ficción) con descripciones detalladas
-5. Arco narrativo general o estructura del libro
+1. **Título del libro**: Creativo, atractivo y que refleje la esencia de la historia descrita
+2. **Sinopsis**: 200-250 palabras que capturen fielmente la descripción del usuario
+3. **Capítulos**: Exactamente ${config.numeroCapitulos} capítulos con:
+   - Títulos descriptivos y atractivos
+   - Descripciones de 2-4 oraciones sobre eventos clave, desarrollo de personajes y avance de la trama
+   - Progresión lógica de la historia desde inicio hasta desenlace
+4. **Personajes principales**: (si aplica) Incluye TODOS los personajes mencionados en la descripción + otros necesarios:
+   - Nombre (usa los nombres exactos proporcionados)
+   - Descripción detallada (personalidad, motivaciones, rol en la historia)
+5. **Arco narrativo**: Estructura general del libro que refleje la historia descrita (150-200 palabras)
 
 IMPORTANTE: Responde ÚNICAMENTE con JSON válido en este formato exacto:
 {
