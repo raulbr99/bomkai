@@ -2,7 +2,7 @@
 
 import { useReducer, useState } from 'react';
 import type { Estado, Accion, ConfiguracionLibro, Capitulo, LibroGuardado, FormatoExportacion } from '@/lib/types';
-import { generarResumen, contarPalabras, calcularProgreso, exportarLibro, descargarArchivo, exportarEPUB } from '@/lib/utils';
+import { generarResumen, contarPalabras, calcularProgreso, exportarLibro, descargarArchivo, exportarEPUB, exportarPDF } from '@/lib/utils';
 import { guardarLibro } from '@/lib/biblioteca';
 import FormularioConfiguracion from '@/components/FormularioConfiguracion';
 import VisualizadorProgreso from '@/components/VisualizadorProgreso';
@@ -319,30 +319,35 @@ export default function Home() {
   };
 
   // Exportar libro desde biblioteca
-  const handleExportarLibroDesdeBiblioteca = (libro: LibroGuardado) => {
+  const handleExportarLibroDesdeBiblioteca = async (libro: LibroGuardado) => {
     // Mostrar opciones de exportación
-    const formato = prompt('¿En qué formato deseas exportar? (txt/md/json/epub)') as FormatoExportacion;
-    if (!formato || !['txt', 'md', 'json', 'epub'].includes(formato)) {
-      alert('Formato no válido');
+    const formato = prompt('¿En qué formato deseas exportar? (txt/epub/pdf)') as FormatoExportacion;
+    if (!formato || !['txt', 'epub', 'pdf'].includes(formato)) {
+      alert('Formato no válido. Opciones: txt, epub, pdf');
       return;
     }
 
-    if (formato === 'epub') {
-      exportarEPUB(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
-    } else {
-      const contenido = exportarLibro(
-        libro.titulo,
-        libro.sinopsis,
-        libro.capitulos,
-        formato,
-        libro.configuracion
-      );
+    try {
+      if (formato === 'epub') {
+        await exportarEPUB(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
+      } else if (formato === 'pdf') {
+        await exportarPDF(libro.titulo, libro.sinopsis, libro.capitulos, libro.configuracion);
+      } else {
+        // TXT
+        const contenido = exportarLibro(
+          libro.titulo,
+          libro.sinopsis,
+          libro.capitulos,
+          formato,
+          libro.configuracion
+        );
 
-      const extension = formato;
-      const tipoMIME = formato === 'json' ? 'application/json' : formato === 'md' ? 'text/markdown' : 'text/plain';
-      const nombreArchivo = `${libro.titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
-
-      descargarArchivo(contenido, nombreArchivo, tipoMIME);
+        const nombreArchivo = `${libro.titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+        descargarArchivo(contenido, nombreArchivo, 'text/plain');
+      }
+    } catch (error) {
+      console.error('Error exportando libro:', error);
+      alert('Error al exportar el libro. Por favor, inténtalo de nuevo.');
     }
   };
 
