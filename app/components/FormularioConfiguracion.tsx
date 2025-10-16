@@ -24,7 +24,7 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
   const [estiloEscritura, setEstiloEscritura] = useState<EstiloEscritura>('Descriptivo');
   const [tono, setTono] = useState<Tono>('Casual');
   const [audienciaObjetivo, setAudienciaObjetivo] = useState<AudienciaObjetivo>('Adultos');
-  const [modelo, setModelo] = useState<ModeloIA>('tngtech/deepseek-r1t2-chimera:free');
+  const [modelo, setModelo] = useState<ModeloIA>('deepseek/deepseek-chat-v3.1:free');
   const [error, setError] = useState<string | null>(null);
   const [mejorandoPrompt, setMejorandoPrompt] = useState(false);
 
@@ -137,105 +137,109 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             {/* Género */}
             <div>
-            <label htmlFor="genero" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Género
-            </label>
-            <select
-              id="genero"
-              value={genero}
-              onChange={(e) => setGenero(e.target.value as Genero)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Ficción">Ficción</option>
-              <option value="No Ficción">No Ficción</option>
-              <option value="Fantasía">Fantasía</option>
-              <option value="Ciencia Ficción">Ciencia Ficción</option>
-              <option value="Misterio">Misterio</option>
-              <option value="Romance">Romance</option>
-              <option value="Autoayuda">Autoayuda</option>
-              <option value="Biografía">Biografía</option>
-            </select>
+              <label htmlFor="genero" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Género
+              </label>
+              <select
+                id="genero"
+                value={genero}
+                onChange={(e) => setGenero(e.target.value as Genero)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={generando}
+              >
+                <option value="Ficción">Ficción</option>
+                <option value="No Ficción">No Ficción</option>
+                <option value="Fantasía">Fantasía</option>
+                <option value="Ciencia Ficción">Ciencia Ficción</option>
+                <option value="Misterio">Misterio</option>
+                <option value="Romance">Romance</option>
+                <option value="Autoayuda">Autoayuda</option>
+                <option value="Biografía">Biografía</option>
+              </select>
             </div>
 
             {/* Estilo de Escritura */}
             <div>
-            <label htmlFor="estilo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Estilo de Escritura
-            </label>
-            <select
-              id="estilo"
-              value={estiloEscritura}
-              onChange={(e) => setEstiloEscritura(e.target.value as EstiloEscritura)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Descriptivo">Descriptivo</option>
-              <option value="Conciso">Conciso</option>
-              <option value="Poético">Poético</option>
-              <option value="Periodístico">Periodístico</option>
-              <option value="Académico">Académico</option>
-              <option value="Conversacional">Conversacional</option>
-            </select>
+              <label htmlFor="estilo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Estilo de Escritura
+              </label>
+              <select
+                id="estilo"
+                value={estiloEscritura}
+                onChange={(e) => setEstiloEscritura(e.target.value as EstiloEscritura)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={generando}
+              >
+                <option value="Descriptivo">Descriptivo</option>
+                <option value="Conciso">Conciso</option>
+                <option value="Poético">Poético</option>
+                <option value="Periodístico">Periodístico</option>
+                <option value="Académico">Académico</option>
+                <option value="Conversacional">Conversacional</option>
+              </select>
             </div>
 
             {/* Tono */}
             <div>
-            <label htmlFor="tono" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tono
-            </label>
-            <select
-              id="tono"
-              value={tono}
-              onChange={(e) => setTono(e.target.value as Tono)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Formal">Formal</option>
-              <option value="Casual">Casual</option>
-              <option value="Humorístico">Humorístico</option>
-              <option value="Serio">Serio</option>
-              <option value="Inspiracional">Inspiracional</option>
-              <option value="Oscuro">Oscuro</option>
-            </select>
+              <label htmlFor="tono" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tono
+              </label>
+              <select
+                id="tono"
+                value={tono}
+                onChange={(e) => setTono(e.target.value as Tono)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={generando}
+              >
+                <option value="Formal">Formal</option>
+                <option value="Casual">Casual</option>
+                <option value="Humorístico">Humorístico</option>
+                <option value="Serio">Serio</option>
+                <option value="Inspiracional">Inspiracional</option>
+                <option value="Oscuro">Oscuro</option>
+              </select>
             </div>
 
             {/* Audiencia Objetivo */}
             <div>
-            <label htmlFor="audiencia" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Audiencia Objetivo
-            </label>
-            <select
-              id="audiencia"
-              value={audienciaObjetivo}
-              onChange={(e) => setAudienciaObjetivo(e.target.value as AudienciaObjetivo)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Niños">Niños</option>
-              <option value="Jóvenes Adultos">Jóvenes Adultos</option>
-              <option value="Adultos">Adultos</option>
-              <option value="Académico">Académico</option>
-            </select>
+              <label htmlFor="audiencia" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Audiencia Objetivo
+              </label>
+              <select
+                id="audiencia"
+                value={audienciaObjetivo}
+                onChange={(e) => setAudienciaObjetivo(e.target.value as AudienciaObjetivo)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={generando}
+              >
+                <option value="Niños">Niños</option>
+                <option value="Jóvenes Adultos">Jóvenes Adultos</option>
+                <option value="Adultos">Adultos</option>
+                <option value="Académico">Académico</option>
+              </select>
             </div>
 
             {/* Modelo de IA */}
             <div>
-            <label htmlFor="modelo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Modelo de IA
-            </label>
-            <select
-              id="modelo"
-              value={modelo}
-              onChange={(e) => setModelo(e.target.value as ModeloIA)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="tngtech/deepseek-r1t2-chimera:free">DeepSeek R1T2 Chimera (Gratis)</option>
-            </select>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Este modelo es gratuito y especializado en razonamiento avanzado
-            </p>
+              <label htmlFor="modelo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Modelo de IA
+              </label>
+              <select
+                id="modelo"
+                value={modelo}
+                onChange={(e) => setModelo(e.target.value as ModeloIA)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={generando}
+              >
+                <option value="deepseek/deepseek-chat-v3.1:free">DeepSeek Chat V3.1 (Gratis)</option>
+                <option value="openai/gpt-oss-20b:free">GPT OSS 20B (Gratis)</option>
+                <option value="tngtech/deepseek-r1t2-chimera:free">DeepSeek R1T2 Chimera (Gratis)</option>
+                <option value="meituan/longcat-flash-chat:free">LongCat Flash Chat (Gratis)</option>
+                <option value="z-ai/glm-4.5-air:free">GLM-4.5 Air (Gratis)</option>
+              </select>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                Modelos gratuitos optimizados para generación de texto creativo
+              </p>
             </div>
           </div>
 

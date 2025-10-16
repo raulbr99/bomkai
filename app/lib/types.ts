@@ -32,7 +32,11 @@ export type AudienciaObjetivo =
   | 'Académico';
 
 export type ModeloIA =
-  | 'tngtech/deepseek-r1t2-chimera:free';
+  | 'tngtech/deepseek-r1t2-chimera:free'
+  | 'openai/gpt-oss-20b:free'
+  | 'deepseek/deepseek-chat-v3.1:free'
+  | 'meituan/longcat-flash-chat:free'
+  | 'z-ai/glm-4.5-air:free';
 
 export interface ConfiguracionLibro {
   tema: string;
