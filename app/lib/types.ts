@@ -31,6 +31,9 @@ export type AudienciaObjetivo =
   | 'Adultos'
   | 'Académico';
 
+export type ModeloIA =
+  | 'tngtech/deepseek-r1t2-chimera:free';
+
 export interface ConfiguracionLibro {
   tema: string;
   genero: Genero;
@@ -38,6 +41,7 @@ export interface ConfiguracionLibro {
   estiloEscritura: EstiloEscritura;
   tono: Tono;
   audienciaObjetivo: AudienciaObjetivo;
+  modelo: ModeloIA;
 }
 
 // Estructura del outline

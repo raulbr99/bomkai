@@ -1,10 +1,16 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { NextRequest } from 'next/server';
 import type { ConfiguracionLibro, Outline } from '@/lib/types';
 
-// Inicializar cliente de Anthropic
-const anthropic = new Anthropic({
-  apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
+// Inicializar cliente de OpenAI con OpenRouter
+const openai = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || '',
+  baseURL: 'https://openrouter.ai/api/v1',
+  defaultHeaders: {
+    'HTTP-Referer': 'https://bomkai.app',
+    'X-Title': 'Bomkai',
+  },
+  dangerouslyAllowBrowser: false,
 });
 
 export async function POST(request: NextRequest) {
@@ -62,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar que tenemos la API key
-    const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
     console.log('🔑 [generar-capitulo] Verificando API key:', {
       hasApiKey: !!apiKey,
       keyLength: apiKey?.length || 0,
@@ -74,7 +80,7 @@ export async function POST(request: NextRequest) {
       return new Response(
         JSON.stringify({
           tipo: 'error',
-          contenido: 'ANTHROPIC_API_KEY no está configurada. Verifica que NEXT_PUBLIC_ANTHROPIC_API_KEY esté configurada en las variables de entorno de Vercel.'
+          contenido: 'OPENROUTER_API_KEY no está configurada. Verifica que NEXT_PUBLIC_OPENROUTER_API_KEY esté configurada en las variables de entorno.'
         }),
         {
           status: 500,
@@ -83,13 +89,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar formato de la API key
-    if (!apiKey.startsWith('sk-ant-')) {
+    // Validar formato de la API key de OpenRouter
+    if (!apiKey.startsWith('sk-or-')) {
       console.error('❌ [generar-capitulo] API key con formato inválido');
       return new Response(
         JSON.stringify({
           tipo: 'error',
-          contenido: 'La API key de Anthropic tiene un formato inválido. Debe comenzar con "sk-ant-"'
+          contenido: 'La API key de OpenRouter tiene un formato inválido. Debe comenzar con "sk-or-"'
         }),
         {
           status: 500,
@@ -126,21 +132,29 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          console.log('🤖 [generar-capitulo] Llamando a Anthropic API...');
+          console.log('🤖 [generar-capitulo] Llamando a OpenRouter API...');
 
-          // Usar streaming de Anthropic con stream: true
-          const stream = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 8000,
-            temperature: 1.0,
-            messages: [
-              {
-                role: 'user',
-                content: prompt,
+          // Usar streaming de OpenAI con stream: true y el modelo seleccionado
+          const stream = await openai.chat.completions.create(
+            {
+              model: configuracion.modelo || 'tngtech/deepseek-r1t2-chimera:free',
+              messages: [
+                {
+                  role: 'user',
+                  content: prompt,
+                },
+              ],
+              temperature: 0.9,
+              max_tokens: 8000,
+              stream: true,
+            },
+            {
+              headers: {
+                'HTTP-Referer': 'https://bomkai.app',
+                'X-Title': 'Bomkai',
               },
-            ],
-            stream: true,
-          }).catch((streamError: unknown) => {
+            }
+          ).catch((streamError: unknown) => {
             console.error('❌ [generar-capitulo] Error iniciando stream:', {
               error: streamError instanceof Error ? streamError.message : 'Error desconocido',
               name: streamError instanceof Error ? streamError.name : undefined,
@@ -148,40 +162,39 @@ export async function POST(request: NextRequest) {
             throw streamError;
           });
 
-          console.log('✅ [generar-capitulo] Conexión con Anthropic establecida');
+          console.log('✅ [generar-capitulo] Conexión con OpenRouter establecida');
 
           // Procesar cada chunk del stream
           console.log('📦 [generar-capitulo] Procesando chunks del stream...');
           let chunkCount = 0;
 
-          for await (const messageStreamEvent of stream) {
-            // Procesar eventos de tipo content_block_delta que contienen el texto
-            if (messageStreamEvent.type === 'content_block_delta') {
-              if (messageStreamEvent.delta.type === 'text_delta') {
-                chunkCount++;
-                const texto = messageStreamEvent.delta.text;
-                contenidoCompleto += texto;
+          for await (const chunk of stream) {
+            // Extraer el contenido del chunk
+            const texto = chunk.choices[0]?.delta?.content || '';
 
-                // Log cada 50 chunks para no saturar los logs
-                if (chunkCount % 50 === 0) {
-                  console.log(`📊 [generar-capitulo] Procesados ${chunkCount} chunks, contenido: ${contenidoCompleto.length} caracteres`);
-                }
+            if (texto) {
+              chunkCount++;
+              contenidoCompleto += texto;
 
-                // Enviar chunk al cliente
-                try {
-                  const chunk = {
-                    tipo: 'chunk',
-                    contenido: texto,
-                  };
-                  const jsonString = JSON.stringify(chunk);
-                  const data = `data: ${jsonString}\n\n`;
-                  controller.enqueue(encoder.encode(data));
-                } catch (encodeError) {
-                  console.error('❌ [generar-capitulo] Error codificando chunk:', {
-                    error: encodeError instanceof Error ? encodeError.message : 'Error desconocido',
-                    textoLength: texto.length,
-                  });
-                }
+              // Log cada 50 chunks para no saturar los logs
+              if (chunkCount % 50 === 0) {
+                console.log(`📊 [generar-capitulo] Procesados ${chunkCount} chunks, contenido: ${contenidoCompleto.length} caracteres`);
+              }
+
+              // Enviar chunk al cliente
+              try {
+                const chunkData = {
+                  tipo: 'chunk',
+                  contenido: texto,
+                };
+                const jsonString = JSON.stringify(chunkData);
+                const data = `data: ${jsonString}\n\n`;
+                controller.enqueue(encoder.encode(data));
+              } catch (encodeError) {
+                console.error('❌ [generar-capitulo] Error codificando chunk:', {
+                  error: encodeError instanceof Error ? encodeError.message : 'Error desconocido',
+                  textoLength: texto.length,
+                });
               }
             }
           }

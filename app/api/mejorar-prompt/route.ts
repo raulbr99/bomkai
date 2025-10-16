@@ -1,9 +1,15 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Inicializar cliente de Anthropic
-const anthropic = new Anthropic({
-  apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
+// Inicializar cliente de OpenAI con OpenRouter
+const openai = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || '',
+  baseURL: 'https://openrouter.ai/api/v1',
+  defaultHeaders: {
+    'HTTP-Referer': 'https://bomkai.app',
+    'X-Title': 'Bomkai',
+  },
+  dangerouslyAllowBrowser: false,
 });
 
 export async function POST(request: NextRequest) {
@@ -12,9 +18,9 @@ export async function POST(request: NextRequest) {
     const { prompt }: { prompt: string } = body;
 
     // Validar que tenemos la API key
-    if (!process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
+    if (!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) {
       return NextResponse.json(
-        { exito: false, error: 'NEXT_PUBLIC_ANTHROPIC_API_KEY no está configurada' },
+        { exito: false, error: 'NEXT_PUBLIC_OPENROUTER_API_KEY no está configurada' },
         { status: 500 }
       );
     }
@@ -30,28 +36,37 @@ export async function POST(request: NextRequest) {
     // Construir el prompt para mejorar la descripción
     const systemPrompt = construirPromptMejora(prompt);
 
-    // Llamar a Claude API
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      temperature: 1.0,
-      messages: [
-        {
-          role: 'user',
-          content: systemPrompt,
+    // Llamar a OpenRouter API
+    const completion = await openai.chat.completions.create(
+      {
+        model: 'tngtech/deepseek-r1t2-chimera:free',
+        messages: [
+          {
+            role: 'user',
+            content: systemPrompt,
+          },
+        ],
+        temperature: 0.8,
+        max_tokens: 2000,
+        stream: false,
+      },
+      {
+        headers: {
+          'HTTP-Referer': 'https://bomkai.app',
+          'X-Title': 'Bomkai',
         },
-      ],
-    });
+      }
+    );
 
     // Extraer el contenido de la respuesta
-    const contenido = message.content[0];
-    if (contenido.type !== 'text') {
-      throw new Error('Respuesta inesperada de la API');
+    const textoRespuesta = completion.choices[0]?.message?.content;
+    if (!textoRespuesta) {
+      throw new Error('No se recibió contenido de la API');
     }
 
     return NextResponse.json({
       exito: true,
-      promptMejorado: contenido.text,
+      promptMejorado: textoRespuesta,
     });
   } catch (error) {
     console.error('Error mejorando prompt:', error);

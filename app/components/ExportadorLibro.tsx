@@ -14,7 +14,7 @@ interface Props {
 
 export default function ExportadorLibro({ titulo, sinopsis, capitulos, configuracion }: Props) {
   const [exportando, setExportando] = useState(false);
-  const [formatoSeleccionado, setFormatoSeleccionado] = useState<FormatoExportacion>('txt');
+  const [formatoSeleccionado, setFormatoSeleccionado] = useState<FormatoExportacion>('epub');
   const capitulosCompletados = capitulos.filter((c) => c.estado === 'completado');
 
   if (capitulosCompletados.length === 0) {

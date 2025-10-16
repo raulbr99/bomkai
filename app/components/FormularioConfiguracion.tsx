@@ -7,6 +7,7 @@ import type {
   EstiloEscritura,
   Tono,
   AudienciaObjetivo,
+  ModeloIA,
 } from '@/lib/types';
 import { validarConfiguracion } from '@/lib/utils';
 import { BookOpen, Sparkles } from 'lucide-react';
@@ -23,6 +24,7 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
   const [estiloEscritura, setEstiloEscritura] = useState<EstiloEscritura>('Descriptivo');
   const [tono, setTono] = useState<Tono>('Casual');
   const [audienciaObjetivo, setAudienciaObjetivo] = useState<AudienciaObjetivo>('Adultos');
+  const [modelo, setModelo] = useState<ModeloIA>('tngtech/deepseek-r1t2-chimera:free');
   const [error, setError] = useState<string | null>(null);
   const [mejorandoPrompt, setMejorandoPrompt] = useState(false);
 
@@ -37,6 +39,7 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
       estiloEscritura,
       tono,
       audienciaObjetivo,
+      modelo,
     };
 
     const validacion = validarConfiguracion(configuracion);
@@ -79,7 +82,7 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
           <BookOpen className="w-6 md:w-8 h-6 md:h-8 text-blue-600 flex-shrink-0" />
@@ -89,7 +92,7 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          {/* Tema */}
+          {/* Tema - Ocupa todo el ancho */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label htmlFor="tema" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -130,8 +133,10 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
             </p>
           </div>
 
-          {/* Género */}
-          <div>
+          {/* Grid de dos columnas para el resto de campos en pantallas grandes */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            {/* Género */}
+            <div>
             <label htmlFor="genero" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Género
             </label>
@@ -151,9 +156,90 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
               <option value="Autoayuda">Autoayuda</option>
               <option value="Biografía">Biografía</option>
             </select>
+            </div>
+
+            {/* Estilo de Escritura */}
+            <div>
+            <label htmlFor="estilo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Estilo de Escritura
+            </label>
+            <select
+              id="estilo"
+              value={estiloEscritura}
+              onChange={(e) => setEstiloEscritura(e.target.value as EstiloEscritura)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              disabled={generando}
+            >
+              <option value="Descriptivo">Descriptivo</option>
+              <option value="Conciso">Conciso</option>
+              <option value="Poético">Poético</option>
+              <option value="Periodístico">Periodístico</option>
+              <option value="Académico">Académico</option>
+              <option value="Conversacional">Conversacional</option>
+            </select>
+            </div>
+
+            {/* Tono */}
+            <div>
+            <label htmlFor="tono" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tono
+            </label>
+            <select
+              id="tono"
+              value={tono}
+              onChange={(e) => setTono(e.target.value as Tono)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              disabled={generando}
+            >
+              <option value="Formal">Formal</option>
+              <option value="Casual">Casual</option>
+              <option value="Humorístico">Humorístico</option>
+              <option value="Serio">Serio</option>
+              <option value="Inspiracional">Inspiracional</option>
+              <option value="Oscuro">Oscuro</option>
+            </select>
+            </div>
+
+            {/* Audiencia Objetivo */}
+            <div>
+            <label htmlFor="audiencia" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Audiencia Objetivo
+            </label>
+            <select
+              id="audiencia"
+              value={audienciaObjetivo}
+              onChange={(e) => setAudienciaObjetivo(e.target.value as AudienciaObjetivo)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              disabled={generando}
+            >
+              <option value="Niños">Niños</option>
+              <option value="Jóvenes Adultos">Jóvenes Adultos</option>
+              <option value="Adultos">Adultos</option>
+              <option value="Académico">Académico</option>
+            </select>
+            </div>
+
+            {/* Modelo de IA */}
+            <div>
+            <label htmlFor="modelo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Modelo de IA
+            </label>
+            <select
+              id="modelo"
+              value={modelo}
+              onChange={(e) => setModelo(e.target.value as ModeloIA)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              disabled={generando}
+            >
+              <option value="tngtech/deepseek-r1t2-chimera:free">DeepSeek R1T2 Chimera (Gratis)</option>
+            </select>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Este modelo es gratuito y especializado en razonamiento avanzado
+            </p>
+            </div>
           </div>
 
-          {/* Número de Capítulos */}
+          {/* Número de Capítulos - Ocupa todo el ancho */}
           <div>
             <label htmlFor="capitulos" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Número de Capítulos: {numeroCapitulos}
@@ -173,67 +259,6 @@ export default function FormularioConfiguracion({ onSubmit, generando }: Props) 
               <span>25</span>
               <span>50</span>
             </div>
-          </div>
-
-          {/* Estilo de Escritura */}
-          <div>
-            <label htmlFor="estilo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Estilo de Escritura
-            </label>
-            <select
-              id="estilo"
-              value={estiloEscritura}
-              onChange={(e) => setEstiloEscritura(e.target.value as EstiloEscritura)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Descriptivo">Descriptivo</option>
-              <option value="Conciso">Conciso</option>
-              <option value="Poético">Poético</option>
-              <option value="Periodístico">Periodístico</option>
-              <option value="Académico">Académico</option>
-              <option value="Conversacional">Conversacional</option>
-            </select>
-          </div>
-
-          {/* Tono */}
-          <div>
-            <label htmlFor="tono" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tono
-            </label>
-            <select
-              id="tono"
-              value={tono}
-              onChange={(e) => setTono(e.target.value as Tono)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Formal">Formal</option>
-              <option value="Casual">Casual</option>
-              <option value="Humorístico">Humorístico</option>
-              <option value="Serio">Serio</option>
-              <option value="Inspiracional">Inspiracional</option>
-              <option value="Oscuro">Oscuro</option>
-            </select>
-          </div>
-
-          {/* Audiencia Objetivo */}
-          <div>
-            <label htmlFor="audiencia" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Audiencia Objetivo
-            </label>
-            <select
-              id="audiencia"
-              value={audienciaObjetivo}
-              onChange={(e) => setAudienciaObjetivo(e.target.value as AudienciaObjetivo)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={generando}
-            >
-              <option value="Niños">Niños</option>
-              <option value="Jóvenes Adultos">Jóvenes Adultos</option>
-              <option value="Adultos">Adultos</option>
-              <option value="Académico">Académico</option>
-            </select>
           </div>
 
           {/* Error */}
