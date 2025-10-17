@@ -105,6 +105,16 @@ function reducer(estado: Estado, accion: Accion): Estado {
             : cap
         ),
       };
+    case 'REGENERAR_CAPITULO':
+      return {
+        ...estado,
+        capitulos: estado.capitulos.map((cap) =>
+          cap.numero === accion.numero
+            ? { ...cap, estado: 'generando' as const, contenido: '' }
+            : cap
+        ),
+        generando: true,
+      };
     case 'ERROR':
       return {
         ...estado,
@@ -254,6 +264,118 @@ export default function Home() {
   // Editar capítulo
   const handleEditarCapitulo = (numero: number, contenido: string) => {
     dispatch({ tipo: 'EDITAR_CAPITULO', numero, contenido });
+  };
+
+  // Regenerar capítulo
+  const handleRegenerarCapitulo = async (numero: number) => {
+    if (!estado.configuracion || !estado.outline) {
+      console.error('No hay configuración u outline disponible');
+      return;
+    }
+
+    // Confirmar con el usuario
+    if (!window.confirm(`¿Estás seguro de que quieres regenerar el Capítulo ${numero}? El contenido actual se perderá.`)) {
+      return;
+    }
+
+    try {
+      dispatch({ tipo: 'REGENERAR_CAPITULO', numero });
+
+      // Obtener resúmenes de capítulos anteriores ya completados
+      const resumenesAnteriores = estado.capitulos
+        .filter((cap) => cap.numero < numero && cap.estado === 'completado')
+        .map((cap) => cap.resumen);
+
+      const responseCapitulo = await fetch('/api/generar-capitulo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numeroCapitulo: numero,
+          outline: estado.outline,
+          configuracion: estado.configuracion,
+          resumenesAnteriores,
+        }),
+      });
+
+      const reader = responseCapitulo.body?.getReader();
+      const decoder = new TextDecoder();
+      let contenidoCompleto = '';
+      let buffer = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const jsonStr = line.slice(6).trim();
+                if (!jsonStr) continue;
+
+                const data = JSON.parse(jsonStr);
+
+                if (data.tipo === 'chunk') {
+                  contenidoCompleto += data.contenido;
+                  dispatch({
+                    tipo: 'ACTUALIZAR_CONTENIDO_CAPITULO',
+                    numero,
+                    contenido: contenidoCompleto,
+                  });
+                } else if (data.tipo === 'completo') {
+                  const resumen = generarResumen(data.contenido);
+                  dispatch({
+                    tipo: 'CAPITULO_COMPLETADO',
+                    numero,
+                    contenido: data.contenido,
+                    resumen,
+                  });
+                } else if (data.tipo === 'error') {
+                  throw new Error(data.contenido);
+                }
+              } catch (parseError) {
+                console.error('Error parseando JSON del stream:', parseError);
+              }
+            }
+          }
+        }
+
+        // Procesar buffer final
+        if (buffer.trim()) {
+          const line = buffer.trim();
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr) {
+                const data = JSON.parse(jsonStr);
+                if (data.tipo === 'completo') {
+                  const resumen = generarResumen(data.contenido);
+                  dispatch({
+                    tipo: 'CAPITULO_COMPLETADO',
+                    numero,
+                    contenido: data.contenido,
+                    resumen,
+                  });
+                }
+              }
+            } catch (parseError) {
+              console.error('Error parseando buffer final:', parseError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      dispatch({
+        tipo: 'ERROR',
+        error: error instanceof Error ? error.message : 'Error regenerando capítulo',
+      });
+    }
   };
 
   // Mejorar capítulo con IA
@@ -437,9 +559,7 @@ export default function Home() {
                 const capitulo = estado.capitulos.find((c) => c.numero === numero);
                 if (capitulo) setCapituloEditando(capitulo);
               }}
-              onRegenerar={(numero) => {
-                alert('Regenerar capítulo aún no implementado');
-              }}
+              onRegenerar={handleRegenerarCapitulo}
             />
           </div>
         )}

@@ -105,6 +105,7 @@ export type Accion =
   | { tipo: 'ACTUALIZAR_PROGRESO'; progreso: number }
   | { tipo: 'CAPITULO_COMPLETADO'; numero: number; contenido: string; resumen: string }
   | { tipo: 'EDITAR_CAPITULO'; numero: number; contenido: string }
+  | { tipo: 'REGENERAR_CAPITULO'; numero: number }
   | { tipo: 'ERROR'; error: string }
   | { tipo: 'REINICIAR' };
 
