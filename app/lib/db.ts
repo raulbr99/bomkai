@@ -23,7 +23,8 @@ export async function initDatabase() {
       fecha_modificacion TIMESTAMP DEFAULT NOW(),
       palabras_totales INTEGER NOT NULL,
       usuario_id TEXT,
-      portada TEXT
+      portada TEXT,
+      modelo TEXT
     )
   `;
 

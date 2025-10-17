@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { LibroGuardado, FormatoExportacion } from '@/lib/types';
-import { ArrowLeft, Download, BookOpen, ChevronDown, ChevronUp, FileText, File } from 'lucide-react';
-import { exportarLibro, descargarArchivo, exportarEPUB, exportarPDF } from '@/lib/utils';
+import { ArrowLeft, Download, BookOpen, ChevronDown, ChevronUp, FileText, File, Sparkles } from 'lucide-react';
+import { exportarLibro, descargarArchivo, exportarEPUB, exportarPDF, formatearNombreModelo } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Props {
   libro: LibroGuardado;
@@ -99,6 +101,12 @@ export default function DetalleLibro({ libro, onVolver, onExportar }: Props) {
               <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm">
                 {libro.configuracion.audienciaObjetivo}
               </span>
+              {libro.modelo && (
+                <span className="px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded-full text-sm flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {formatearNombreModelo(libro.modelo)}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-4">
@@ -279,10 +287,10 @@ export default function DetalleLibro({ libro, onVolver, onExportar }: Props) {
 
                 {estaExpandido && (
                   <div className="p-6 bg-white dark:bg-gray-800">
-                    <div className="prose dark:prose-invert max-w-none">
-                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-relaxed prose-strong:text-gray-900 dark:prose-strong:text-white prose-em:text-gray-800 dark:prose-em:text-gray-200">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {capitulo.contenido}
-                      </p>
+                      </ReactMarkdown>
                     </div>
                   </div>
                 )}

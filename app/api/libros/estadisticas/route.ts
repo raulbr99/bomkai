@@ -14,36 +14,41 @@ export async function GET() {
       console.log('ℹ️ Tabla ya existe o error al crear:', initError);
     }
 
-    const result = await sql`
+    // Obtener todos los libros y calcular estadísticas en JavaScript
+    const libros = await sql`
       SELECT
-        COUNT(*)::int as total_libros,
-        COALESCE(SUM(palabras_totales), 0)::int as total_palabras,
-        COALESCE(SUM(jsonb_array_length(capitulos)), 0)::int as total_capitulos
+        palabras_totales,
+        capitulos,
+        configuracion
       FROM libros
     `;
 
-    const generosResult = await sql`
-      SELECT configuracion->>'genero' as genero, COUNT(*)::int as count
-      FROM libros
-      GROUP BY configuracion->>'genero'
-      ORDER BY count DESC
-      LIMIT 1
-    `;
+    const totalLibros = libros.length;
+    const totalPalabras = libros.reduce((sum, libro) => sum + (libro.palabras_totales || 0), 0);
+    const totalCapitulos = libros.reduce((sum, libro) => {
+      const caps = libro.capitulos;
+      return sum + (Array.isArray(caps) ? caps.length : 0);
+    }, 0);
 
-    const stats = result[0];
-    const generoMasComun = generosResult.length > 0 ? generosResult[0].genero : 'N/A';
+    // Calcular género más común
+    const generos = libros.reduce((acc, libro) => {
+      const genero = libro.configuracion?.genero || 'Desconocido';
+      acc[genero] = (acc[genero] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-    const totalLibros = stats.total_libros || 0;
-    const totalCapitulos = stats.total_capitulos || 0;
+    const generoMasComun = totalLibros > 0
+      ? Object.entries(generos).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'
+      : 'N/A';
 
     return NextResponse.json({
       exito: true,
       estadisticas: {
         totalLibros,
-        totalPalabras: stats.total_palabras || 0,
+        totalPalabras,
         totalCapitulos,
         promedioCapitulosPorLibro: totalLibros > 0 ? Math.round(totalCapitulos / totalLibros) : 0,
-        promedioPalabrasPorLibro: totalLibros > 0 ? Math.round((stats.total_palabras || 0) / totalLibros) : 0,
+        promedioPalabrasPorLibro: totalLibros > 0 ? Math.round(totalPalabras / totalLibros) : 0,
         generoMasComun,
       },
     });

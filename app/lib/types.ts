@@ -160,4 +160,5 @@ export interface LibroGuardado {
   fechaModificacion: string;
   palabrasTotales: number;
   portada?: string; // URL o base64 de imagen de portada
+  modelo?: ModeloIA; // Modelo de IA usado para generar el libro
 }

@@ -1,4 +1,21 @@
-import type { Capitulo, ConfiguracionLibro, ExportacionLibro, FormatoExportacion } from './types';
+import type { Capitulo, ConfiguracionLibro, ExportacionLibro, FormatoExportacion, ModeloIA } from './types';
+
+/**
+ * Formatea el nombre del modelo para mostrarlo de forma legible
+ */
+export function formatearNombreModelo(modelo?: ModeloIA | string): string {
+  if (!modelo) return 'Modelo no especificado';
+
+  const nombresModelos: Record<string, string> = {
+    'deepseek/deepseek-chat-v3.1:free': 'DeepSeek Chat V3.1',
+    'openai/gpt-oss-20b:free': 'GPT OSS 20B',
+    'tngtech/deepseek-r1t2-chimera:free': 'DeepSeek R1T2 Chimera',
+    'meituan/longcat-flash-chat:free': 'LongCat Flash Chat',
+    'z-ai/glm-4.5-air:free': 'GLM-4.5 Air',
+  };
+
+  return nombresModelos[modelo] || modelo;
+}
 
 /**
  * Estima la cantidad de tokens en un texto

@@ -1,16 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import type { Capitulo } from '@/lib/types';
-import { X, Edit, RotateCw, BookOpen, Clock } from 'lucide-react';
+import type { Capitulo, ConfiguracionLibro } from '@/lib/types';
+import { X, Edit, RotateCw, BookOpen, Clock, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { formatearNombreModelo } from '@/lib/utils';
 
 interface Props {
   capitulos: Capitulo[];
+  configuracion?: ConfiguracionLibro;
   onEditar: (numero: number) => void;
   onRegenerar: (numero: number) => void;
 }
 
-export default function PreviewCapitulos({ capitulos, onEditar, onRegenerar }: Props) {
+export default function PreviewCapitulos({ capitulos, configuracion, onEditar, onRegenerar }: Props) {
   const [capituloSeleccionado, setCapituloSeleccionado] = useState<number | null>(null);
 
   const capitulosCompletados = capitulos.filter((c) => c.estado === 'completado');
@@ -23,9 +27,17 @@ export default function PreviewCapitulos({ capitulos, onEditar, onRegenerar }: P
 
   return (
     <div className="w-full max-w-6xl mx-auto">
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-        Capítulos Generados ({capitulosCompletados.length})
-      </h3>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Capítulos Generados ({capitulosCompletados.length})
+        </h3>
+        {configuracion?.modelo && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg text-sm">
+            <Sparkles className="w-4 h-4" />
+            <span className="font-medium">{formatearNombreModelo(configuracion.modelo)}</span>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Columna izquierda: Lista de capítulos */}
@@ -138,10 +150,10 @@ export default function PreviewCapitulos({ capitulos, onEditar, onRegenerar }: P
 
               {/* Contenido del capítulo */}
               <div className="p-6 max-h-[600px] overflow-y-auto">
-                <div className="prose dark:prose-invert max-w-none">
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed text-justify">
+                <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-relaxed prose-p:text-justify prose-strong:text-gray-900 dark:prose-strong:text-white prose-em:text-gray-800 dark:prose-em:text-gray-200">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {capitulo.contenido}
-                  </p>
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>

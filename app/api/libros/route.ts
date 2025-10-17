@@ -31,6 +31,7 @@ export async function GET() {
       fechaModificacion: row.fecha_modificacion,
       palabrasTotales: row.palabras_totales,
       portada: row.portada,
+      modelo: row.modelo,
     }));
 
     return NextResponse.json({ exito: true, libros });
@@ -84,7 +85,8 @@ export async function POST(request: NextRequest) {
         configuracion,
         outline,
         capitulos,
-        palabras_totales
+        palabras_totales,
+        modelo
       ) VALUES (
         ${id},
         ${titulo},
@@ -92,7 +94,8 @@ export async function POST(request: NextRequest) {
         ${JSON.stringify(configuracion)},
         ${JSON.stringify(outline)},
         ${JSON.stringify(capitulos.filter((cap: Capitulo) => cap.estado === 'completado'))},
-        ${palabrasTotales}
+        ${palabrasTotales},
+        ${configuracion.modelo || null}
       )
     `;
 
@@ -106,6 +109,7 @@ export async function POST(request: NextRequest) {
       fechaCreacion: new Date().toISOString(),
       fechaModificacion: new Date().toISOString(),
       palabrasTotales,
+      modelo: configuracion.modelo,
     };
 
     return NextResponse.json({ exito: true, libro: nuevoLibro });

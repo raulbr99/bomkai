@@ -347,7 +347,13 @@ export default function Home() {
             <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
               <button
                 type="button"
-                onClick={() => setVistaActual('generador')}
+                onClick={() => {
+                  setVistaActual('generador');
+                  // Si hay un libro completado, reiniciar el estado
+                  if (estado.etapa === 'completado') {
+                    dispatch({ tipo: 'REINICIAR' });
+                  }
+                }}
                 className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base ${
                   vistaActual === 'generador'
                     ? 'bg-blue-600 text-white'
@@ -426,6 +432,7 @@ export default function Home() {
           <div className="mt-8">
             <PreviewCapitulos
               capitulos={estado.capitulos}
+              configuracion={estado.configuracion || undefined}
               onEditar={(numero) => {
                 const capitulo = estado.capitulos.find((c) => c.numero === numero);
                 if (capitulo) setCapituloEditando(capitulo);

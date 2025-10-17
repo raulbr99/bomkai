@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import type { LibroGuardado } from '@/lib/types';
 import { obtenerLibros, eliminarLibro, ordenarLibros, buscarLibros, obtenerEstadisticas } from '@/lib/biblioteca';
-import { BookOpen, Trash2, Eye, Download, Search, SortAsc, BarChart3, Loader2 } from 'lucide-react';
+import { BookOpen, Trash2, Eye, Download, Search, SortAsc, BarChart3, Loader2, Sparkles } from 'lucide-react';
+import { formatearNombreModelo } from '@/lib/utils';
 
 interface Props {
   onVerLibro: (libro: LibroGuardado) => void;
@@ -14,6 +15,8 @@ interface Estadisticas {
   totalLibros: number;
   totalPalabras: number;
   totalCapitulos: number;
+  promedioCapitulosPorLibro?: number;
+  promedioPalabrasPorLibro?: number;
   generoMasComun: string;
 }
 
@@ -78,7 +81,7 @@ export default function BibliotecaLibros({ onVerLibro, onExportarLibro }: Props)
           <div className="flex items-center gap-3">
             <BookOpen className="w-8 h-8 text-purple-600" />
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Mi Biblioteca
+              Biblioteca
             </h2>
           </div>
           <button
@@ -192,7 +195,7 @@ export default function BibliotecaLibros({ onVerLibro, onExportarLibro }: Props)
 
               {/* Información */}
               <div className="p-4">
-                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
                   <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
                     {libro.configuracion.genero}
                   </span>
@@ -201,9 +204,16 @@ export default function BibliotecaLibros({ onVerLibro, onExportarLibro }: Props)
                   <span>{(libro.palabrasTotales / 1000).toFixed(1)}k palabras</span>
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
                   {libro.sinopsis}
                 </p>
+
+                {libro.modelo && (
+                  <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 mb-3">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{formatearNombreModelo(libro.modelo)}</span>
+                  </div>
+                )}
 
                 <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
                   Creado: {new Date(libro.fechaCreacion).toLocaleDateString('es-ES')}
